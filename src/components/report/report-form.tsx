@@ -1,81 +1,110 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
-import { MapPin, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { collection } from 'firebase/firestore';
+import { MapPin, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { submitIssue, type FormState } from '@/app/report/actions';
+import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
+import { categorizeIssueReport } from '@/ai/flows/categorize-issue-reports';
 
 const formSchema = z.object({
-  description: z.string().min(10, "Please provide a detailed description (at least 10 characters)."),
-  location: z.string().min(3, "Please provide a specific location."),
+  title: z.string().min(5, 'Please provide a title (at least 5 characters).'),
+  description: z.string().min(10, 'Please provide a detailed description (at least 10 characters).'),
+  location: z.string().min(3, 'Please provide a specific location.'),
   media: z.any().optional(),
 });
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-        </>
-      ) : (
-        'Submit Issue'
-      )}
-    </Button>
-  );
-}
-
 export function ReportForm() {
   const { toast } = useToast();
+  const router = useRouter();
+  const firestore = useFirestore();
+  const { user } = useUser();
+
+  const [isLoading, setIsLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-  const [formState, formAction] = useFormState<FormState, FormData>(submitIssue, {
-    message: '',
-    success: false,
-  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title: '',
       description: '',
       location: '',
     },
   });
 
-  useEffect(() => {
-    if (formState.message) {
-      if (formState.success) {
-        toast({
-          title: 'Success!',
-          description: formState.message,
-        });
-        form.reset();
-        formRef.current?.reset();
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: formState.message,
-        });
-      }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'You must be logged in to report an issue.',
+      });
+      router.push('/login');
+      return;
     }
-  }, [formState, toast, form]);
+
+    setIsLoading(true);
+
+    try {
+      // Step 1: Call the AI to categorize the issue
+      const categorization = await categorizeIssueReport({
+        description: values.description,
+        location: values.location,
+      });
+
+      // Step 2: Prepare the new issue document
+      const issuesCollectionRef = collection(firestore, 'issues');
+      const newIssue = {
+        userId: user.uid,
+        title: values.title,
+        description: values.description,
+        location: values.location,
+        category: categorization.category,
+        severity: categorization.severity,
+        status: 'Reported' as const,
+        upvotes: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        reporterName: user.displayName || user.email || 'Anonymous',
+        reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
+      };
+
+      // Step 3: Save to Firestore (non-blocking)
+      addDocumentNonBlocking(issuesCollectionRef, newIssue);
+      
+      toast({
+        title: 'Issue Reported!',
+        description: `Thanks for your help. Your issue has been submitted and categorized as "${categorization.severity}" severity.`,
+      });
+
+      form.reset();
+      router.push('/');
+
+    } catch (error) {
+      console.error('Error submitting issue:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Submission Failed',
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleGetLocation = () => {
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        // In a real app, you might reverse-geocode this. For now, we'll just use coords.
         const { latitude, longitude } = position.coords;
         form.setValue('location', `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`, {
           shouldValidate: true,
@@ -96,7 +125,20 @@ export function ReportForm() {
 
   return (
     <Form {...form}>
-      <form ref={formRef} action={formAction} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Large pothole causing traffic issues" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="description"
@@ -125,17 +167,11 @@ export function ReportForm() {
                   <Input placeholder="e.g., Corner of Main St & Oak Ave" {...field} />
                 </FormControl>
                 <Button type="button" variant="outline" onClick={handleGetLocation} disabled={isLocating}>
-                  {isLocating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <MapPin className="h-4 w-4" />
-                  )}
+                  {isLocating ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
                   <span className="sr-only">Get current location</span>
                 </Button>
               </div>
-              <FormDescription>
-                Be as specific as possible for a faster response.
-              </FormDescription>
+              <FormDescription>Be as specific as possible for a faster response.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -143,20 +179,31 @@ export function ReportForm() {
         <FormField
           control={form.control}
           name="media"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Attach Photo/Video (Optional)</FormLabel>
+          render={({ field: { onChange, value, ...rest } }) => (
+             <FormItem>
+              <FormLabel>Attach Photo (Optional)</FormLabel>
               <FormControl>
-                <Input type="file" {...field} />
+                <Input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                  {...rest}
+                />
               </FormControl>
-              <FormDescription>
-                A picture is worth a thousand words.
-              </FormDescription>
+              <FormDescription>A picture is worth a thousand words.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <SubmitButton />
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+            </>
+          ) : (
+            'Submit Issue'
+          )}
+        </Button>
       </form>
     </Form>
   );
