@@ -6,13 +6,13 @@
       "type": "object",
       "description": "Represents a reported civic issue.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the IssueReport entity."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to User who reported the issue. (Relationship: User 1:N IssueReport)"
+          "description": "Reference to User who reported the issue."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the reported issue."
         },
         "category": {
           "type": "string",
@@ -26,20 +26,13 @@
           "type": "string",
           "description": "Detailed description of the reported issue."
         },
-        "latitude": {
-          "type": "number",
-          "description": "Latitude coordinate of the issue's location."
+        "location": {
+          "type": "string",
+          "description": "User-provided string for the issue's location."
         },
-        "longitude": {
-          "type": "number",
-          "description": "Longitude coordinate of the issue's location."
-        },
-        "mediaUrls": {
-          "type": "array",
-          "description": "Array of URLs pointing to multimedia attachments (images, videos) related to the issue.",
-          "items": {
-            "type": "string"
-          }
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to an image of the issue."
         },
         "status": {
           "type": "string",
@@ -47,31 +40,36 @@
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp indicating when the issue was reported.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "Timestamp indicating when the issue was last updated.",
           "format": "date-time"
         },
-        "upvoteCount": {
+        "upvotes": {
           "type": "number",
           "description": "Number of upvotes the issue has received."
+        },
+        "reporterName": {
+          "type": "string",
+          "description": "Name of the user who reported the issue."
+        },
+        "reporterAvatarUrl": {
+          "type": "string",
+          "description": "Avatar URL of the user who reported the issue."
         }
       },
       "required": [
-        "id",
         "userId",
+        "title",
         "category",
         "severity",
         "description",
-        "latitude",
-        "longitude",
+        "location",
         "status",
         "createdAt",
-        "updatedAt",
-        "upvoteCount"
+        "upvotes",
+        "reporterName"
       ]
     },
     "User": {
@@ -116,8 +114,6 @@
         "id",
         "name",
         "email",
-        "phoneNumber",
-        "address",
         "createdAt",
         "updatedAt"
       ]
@@ -138,7 +134,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profiles.  Access is restricted to the user and potentially administrative roles. Includes userId in path for easy access.",
+          "description": "Stores user profiles. Access is restricted to the user.",
           "params": [
             {
               "name": "userId",
@@ -148,26 +144,22 @@
         }
       },
       {
-        "path": "/users/{userId}/issueReports/{issueReportId}",
+        "path": "/issues/{issueId}",
         "definition": {
           "entityName": "IssueReport",
           "schema": {
             "$ref": "#/backend/entities/IssueReport"
           },
-          "description": "Stores issue reports created by users. Uses path-based ownership to ensure only the user can manage their reports. No denormalized authorization fields are required since access control relies solely on path.",
+          "description": "Stores publicly visible issue reports that anyone can view.",
           "params": [
             {
-              "name": "userId",
-              "description": "The unique identifier of the user who created the issue report."
-            },
-            {
-              "name": "issueReportId",
+              "name": "issueId",
               "description": "The unique identifier of the issue report."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and query performance, adhering to the principles of Authorization Independence, Structural Segregation, and Access Modeling. We leverage path-based ownership for user-generated content and denormalization to avoid `get()` calls in security rules.\n\n1.  **Issue Reports:** Issue reports are stored under `/users/{userId}/issueReports/{issueReportId}`. This path-based ownership ensures that only the user can create, read, update, and delete their own reports.\n\n**Authorization Independence:** No `get()` calls are needed in the security rules because the `userId` is embedded in the document path.\n\n**QAPs Support:** The structure is designed to enable secure `list` operations. Users can only list issue reports under their own user ID, while admins (if implemented) could have separate collections or mechanisms for broader access (not detailed here, but could involve a global roles collection).\n\n2.  **Users:** User profiles are stored in the `/users/{userId}` collection.  This collection stores user-related information. Access is restricted to the user and, potentially, administrative roles (not detailed here, but could involve a global roles collection).\n\n**Authorization Independence:** User documents are accessed directly by their `userId`, eliminating the need to fetch parent documents for authorization.\n\n**QAPs Support:** List operations are restricted, ensuring that only the current user (or an admin) can access user documents."
+    "reasoning": "The Firestore structure is designed for a public-facing issue board. The top-level `issues` collection is publicly readable, allowing anyone to see the reported problems. The `users` collection stores private user data, accessible only by the owning user."
   }
 }

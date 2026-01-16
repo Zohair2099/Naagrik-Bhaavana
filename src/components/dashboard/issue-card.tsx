@@ -17,13 +17,13 @@ interface IssueCardProps {
 
 const severityConfig: Record<Severity, { className: string; icon: React.ReactNode }> = {
   low: { className: 'bg-accent text-accent-foreground hover:bg-accent/80', icon: <CheckCircle className="h-4 w-4" /> },
-  medium: { className: 'bg-secondary text-secondary-foreground hover:bg-secondary/80', icon: <AlertTriangle className="h-4 w-4" /> },
+  medium: { className: 'bg-yellow-500 text-white hover:bg-yellow-500/80', icon: <AlertTriangle className="h-4 w-4" /> },
   high: { className: 'bg-destructive text-destructive-foreground hover:bg-destructive/80', icon: <AlertTriangle className="h-4 w-4" /> },
 };
 
 const statusConfig: Record<IssueStatus, { className: string; icon: React.ReactNode }> = {
-  Reported: { className: 'bg-primary text-primary-foreground hover:bg-primary/80', icon: <Clock className="h-3 w-3" /> },
-  'In Progress': { className: 'bg-secondary text-secondary-foreground hover:bg-secondary/80', icon: <Clock className="h-3 w-3" /> },
+  Reported: { className: 'bg-blue-500 text-white hover:bg-blue-500/80', icon: <Clock className="h-3 w-3" /> },
+  'In Progress': { className: 'bg-orange-500 text-white hover:bg-orange-500/80', icon: <Clock className="h-3 w-3" /> },
   Resolved: { className: 'bg-accent text-accent-foreground hover:bg-accent/80', icon: <CheckCircle className="h-3 w-3" /> },
 };
 
@@ -65,11 +65,11 @@ export function IssueCard({ issue, onUpvote }: IssueCardProps) {
         <div className="flex items-center space-x-4">
             <div className="flex items-center">
                 <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src={issue.reporter.avatarUrl} alt={issue.reporter.name} />
-                    <AvatarFallback>{issue.reporter.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={issue.reporterAvatarUrl} alt={issue.reporterName} />
+                    <AvatarFallback>{issue.reporterName ? issue.reporterName.charAt(0) : 'U'}</AvatarFallback>
                 </Avatar>
                 <div>
-                    <p className="text-sm font-medium">{issue.reporter.name}</p>
+                    <p className="text-sm font-medium">{issue.reporterName}</p>
                     <p className="text-xs text-muted-foreground">{timeAgo}</p>
                 </div>
             </div>
