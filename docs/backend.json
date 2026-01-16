@@ -34,6 +34,10 @@
           "type": "string",
           "description": "URL to an image of the issue."
         },
+        "imageHint": {
+          "type": "string",
+          "description": "AI-generated hint for the image content, used for accessibility and search."
+        },
         "status": {
           "type": "string",
           "description": "Current status of the issue (e.g., reported, in progress, resolved)."

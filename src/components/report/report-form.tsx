@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { collection } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { MapPin, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -13,20 +14,31 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useFirebaseApp, addDocumentNonBlocking } from '@/firebase';
 import { categorizeIssueReport } from '@/ai/flows/categorize-issue-reports';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Please provide a title (at least 5 characters).'),
   description: z.string().min(10, 'Please provide a detailed description (at least 10 characters).'),
   location: z.string().min(3, 'Please provide a specific location.'),
-  media: z.any().optional(),
+  media: z.instanceof(File).optional(),
 });
+
+// Helper to convert a file to a data URI
+const fileToDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 export function ReportForm() {
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
+  const firebaseApp = useFirebaseApp();
   const { user } = useUser();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -55,13 +67,31 @@ export function ReportForm() {
     setIsLoading(true);
 
     try {
-      // Step 1: Call the AI to categorize the issue
+      let imageUrl: string | undefined;
+      let imageHint: string | undefined;
+      let photoDataUri: string | undefined;
+
+      // Step 1: Handle image upload if a file is provided
+      if (values.media) {
+        photoDataUri = await fileToDataUri(values.media);
+        const storage = getStorage(firebaseApp);
+        const storageRef = ref(storage, `issues/${user.uid}/${Date.now()}-${values.media.name}`);
+        
+        // Upload file and get URL
+        const uploadResult = await uploadBytes(storageRef, values.media);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      }
+
+      // Step 2: Call the AI to categorize the issue
       const categorization = await categorizeIssueReport({
         description: values.description,
         location: values.location,
+        photoDataUri: photoDataUri,
       });
+      
+      imageHint = categorization.imageHint;
 
-      // Step 2: Prepare the new issue document
+      // Step 3: Prepare the new issue document
       const issuesCollectionRef = collection(firestore, 'issues');
       const newIssue = {
         userId: user.uid,
@@ -76,9 +106,11 @@ export function ReportForm() {
         updatedAt: new Date().toISOString(),
         reporterName: user.displayName || user.email || 'Anonymous',
         reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
+        imageUrl,
+        imageHint
       };
 
-      // Step 3: Save to Firestore (non-blocking)
+      // Step 4: Save to Firestore (non-blocking)
       addDocumentNonBlocking(issuesCollectionRef, newIssue);
       
       toast({
@@ -187,7 +219,6 @@ export function ReportForm() {
                   type="file" 
                   accept="image/*"
                   onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
-                  {...rest}
                 />
               </FormControl>
               <FormDescription>A picture is worth a thousand words.</FormDescription>

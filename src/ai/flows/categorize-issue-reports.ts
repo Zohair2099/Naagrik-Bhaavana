@@ -15,13 +15,19 @@ import {z} from 'genkit';
 const CategorizeIssueReportInputSchema = z.object({
   description: z.string().describe('The description of the issue report.'),
   location: z.string().describe('The location of the issue.'),
-  mediaUrl: z.string().optional().describe('URL of attached media, if any'),
+  photoDataUri: z
+    .string()
+    .optional()
+    .describe(
+      "A photo of the issue, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
 });
 export type CategorizeIssueReportInput = z.infer<typeof CategorizeIssueReportInputSchema>;
 
 const CategorizeIssueReportOutputSchema = z.object({
-  category: z.string().describe('The category of the issue (e.g., potholes, street lighting, garbage).'),
+  category: z.string().describe('The category of the issue (e.g., Pothole, Streetlight, Garbage, Graffiti).'),
   severity: z.enum(['low', 'medium', 'high']).describe('The severity of the issue.'),
+  imageHint: z.string().optional().describe('A two-word hint for the image content, used for accessibility and searching for a better image.'),
 });
 export type CategorizeIssueReportOutput = z.infer<typeof CategorizeIssueReportOutputSchema>;
 
@@ -33,11 +39,13 @@ const categorizeIssueReportPrompt = ai.definePrompt({
   name: 'categorizeIssueReportPrompt',
   input: {schema: CategorizeIssueReportInputSchema},
   output: {schema: CategorizeIssueReportOutputSchema},
-  prompt: `You are an AI assistant helping to categorize civic issue reports.  Based on the description and location provided in the issue report, determine the most appropriate category and severity.
+  prompt: `You are an AI assistant helping to categorize civic issue reports. Based on the description, location, and photo provided, determine the most appropriate category and severity for the issue. Also provide a two-word "image hint" that describes the main subject of the photo.
 
 Description: {{{description}}}
 Location: {{{location}}}
-{{#if mediaUrl}}Media URL: {{mediaUrl}}{{/if}}
+{{#if photoDataUri}}
+Photo: {{media url=photoDataUri}}
+{{/if}}
 
 Response in JSON format.
 `,
