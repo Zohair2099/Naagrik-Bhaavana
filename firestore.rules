@@ -1,0 +1,138 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All data is private
+ * to the user who created it, ensuring a high degree of security and privacy by default.
+ *
+ * Data Structure: All user-specific data is nested under a top-level `/users/{userId}`
+ * path. This includes the user's own profile document and any subcollections they create,
+ * such as `/issueReports`. This hierarchical structure makes path-based security simple
+ * and performant.
+ *
+ * Key Security Decisions:
+ * - User Enumeration is Disabled: It is not possible for any client to list all documents
+ *   in the `/users` collection. This is a critical security measure to prevent scraping user data.
+ * - Path-Based Ownership: Authorization is determined by the `{userId}` in the document path.
+ *   This avoids the need for slow and costly `get()` calls to other documents.
+ * - No Public Data: There are no publicly readable collections. A user must be signed in
+ *   and be the explicit owner to access any data.
+ *
+ * Denormalization for Authorization: While this ruleset primarily uses path-based security,
+ * it enforces that documents contain an internal owner ID field (e.g., `id` on a User profile,
+ * `userId` on an IssueReport). This enforces relational integrity, ensuring that a document's
+ * data is always consistent with its location in the database. For example, an IssueReport
+ * at `/users/abc/...` MUST have its `userId` field set to 'abc'.
+ *
+ * Structural Segregation: The data model naturally segregates each user's data into their
+ * own document tree, preventing any overlap between different users' private information.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is properly authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's ID matches the provided userId.
+     * This is the core of our ownership-based security model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * A robust check for update/delete operations, ensuring the user is the owner
+     * AND the document actually exists.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * On create, validates that the user's profile document has an `id` field
+     * that matches the document's ID in the path.
+     */
+    function isUserIdConsistentOnCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * On update, ensures the user's `id` field cannot be changed. This locks
+     * the document's core identity.
+     */
+    function isUserIdImmutableOnUpdate() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * On create, validates that an issue report has a `userId` field that
+     * matches the owner's ID from the path.
+     */
+    function isReportOwnerConsistentOnCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * On update, ensures the `userId` field on an issue report cannot be changed,
+     * preventing the report from being reassigned to another user.
+     */
+    function isReportOwnerImmutableOnUpdate() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Collection Group Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Blocks listing all user profiles to prevent data scraping.
+     * @path /users
+     * @allow (n/a) No operation is permitted on the collection itself.
+     * @deny A user (auth.uid='user123') attempting `db.collection('users').get()`.
+     * @principle Prevents data leakage by disallowing enumeration of all application users.
+     */
+    match /users {
+      allow read, write: if false;
+    }
+
+    /**
+     * @description Rules for a user's own profile document.
+     * @path /users/{userId}
+     * @allow A signed-in user (auth.uid='user123') creating their own profile at `/users/user123`.
+     * @allow A signed-in user (auth.uid='user123') reading their own profile at `/users/user123`.
+     * @deny A signed-in user (auth.uid='user456') trying to update the profile at `/users/user123`.
+     * @principle Enforces that users can only create and manage their own profile document.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Explicitly deny listing even a single document.
+      allow create: if isOwner(userId) && isUserIdConsistentOnCreate(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutableOnUpdate();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for issue reports, which are private to the user who created them.
+     * @path /users/{userId}/issueReports/{issueReportId}
+     * @allow A user (auth.uid='user123') creating a new report at `/users/user123/issueReports/reportABC`.
+     * @allow A user (auth.uid='user123') listing all reports under `/users/user123/issueReports`.
+     * @deny A user (auth.uid='user456') trying to read a report at `/users/user123/issueReports/reportABC`.
+     * @principle Restricts access to a user's own data tree using path-based security.
+     */
+    match /users/{userId}/issueReports/{issueReportId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isReportOwnerConsistentOnCreate(userId);
+      allow update: if isExistingOwner(userId) && isReportOwnerImmutableOnUpdate();
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

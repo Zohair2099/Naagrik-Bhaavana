@@ -1,0 +1,173 @@
+{
+  "entities": {
+    "IssueReport": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "IssueReport",
+      "type": "object",
+      "description": "Represents a reported civic issue.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the IssueReport entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User who reported the issue. (Relationship: User 1:N IssueReport)"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the reported issue (e.g., potholes, street lighting)."
+        },
+        "severity": {
+          "type": "string",
+          "description": "Severity level of the reported issue (e.g., low, medium, high)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the reported issue."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "Latitude coordinate of the issue's location."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "Longitude coordinate of the issue's location."
+        },
+        "mediaUrls": {
+          "type": "array",
+          "description": "Array of URLs pointing to multimedia attachments (images, videos) related to the issue.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the issue (e.g., reported, in progress, resolved)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the issue was reported.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the issue was last updated.",
+          "format": "date-time"
+        },
+        "upvoteCount": {
+          "type": "number",
+          "description": "Number of upvotes the issue has received."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "category",
+        "severity",
+        "description",
+        "latitude",
+        "longitude",
+        "status",
+        "createdAt",
+        "updatedAt",
+        "upvoteCount"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Phone number of the user."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phoneNumber",
+        "address",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles.  Access is restricted to the user and potentially administrative roles. Includes userId in path for easy access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/issueReports/{issueReportId}",
+        "definition": {
+          "entityName": "IssueReport",
+          "schema": {
+            "$ref": "#/backend/entities/IssueReport"
+          },
+          "description": "Stores issue reports created by users. Uses path-based ownership to ensure only the user can manage their reports. No denormalized authorization fields are required since access control relies solely on path.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who created the issue report."
+            },
+            {
+              "name": "issueReportId",
+              "description": "The unique identifier of the issue report."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and query performance, adhering to the principles of Authorization Independence, Structural Segregation, and Access Modeling. We leverage path-based ownership for user-generated content and denormalization to avoid `get()` calls in security rules.\n\n1.  **Issue Reports:** Issue reports are stored under `/users/{userId}/issueReports/{issueReportId}`. This path-based ownership ensures that only the user can create, read, update, and delete their own reports.\n\n**Authorization Independence:** No `get()` calls are needed in the security rules because the `userId` is embedded in the document path.\n\n**QAPs Support:** The structure is designed to enable secure `list` operations. Users can only list issue reports under their own user ID, while admins (if implemented) could have separate collections or mechanisms for broader access (not detailed here, but could involve a global roles collection).\n\n2.  **Users:** User profiles are stored in the `/users/{userId}` collection.  This collection stores user-related information. Access is restricted to the user and, potentially, administrative roles (not detailed here, but could involve a global roles collection).\n\n**Authorization Independence:** User documents are accessed directly by their `userId`, eliminating the need to fetch parent documents for authorization.\n\n**QAPs Support:** List operations are restricted, ensuring that only the current user (or an admin) can access user documents."
+  }
+}
