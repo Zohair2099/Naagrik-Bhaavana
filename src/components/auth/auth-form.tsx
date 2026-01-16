@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,6 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth, useUser } from '@/firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  AuthError,
+} from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -23,26 +30,46 @@ interface AuthFormProps {
 export function AuthForm({ mode }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const auth = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
-    console.log(values); // In a real app, you'd call your auth API here.
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+  useEffect(() => {
+    if (user) {
       toast({
         title: mode === 'login' ? 'Logged In!' : 'Account Created!',
         description: "You're being redirected to the dashboard.",
       });
-      // In a real app, you would redirect the user.
-      // E.g., router.push('/');
-    }, 1500);
+      router.push('/');
+    }
+  }, [user, router, mode, toast]);
+
+
+  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+    setIsLoading(true);
+    const isLogin = mode === 'login';
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, values.email, values.password);
+      } else {
+        await createUserWithEmailAndPassword(auth, values.email, values.password);
+      }
+      // The `useEffect` hook above will handle the redirect on successful login/signup.
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error(authError);
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Error',
+        description: authError.message || 'An unexpected error occurred.',
+      });
+      setIsLoading(false);
+    }
   };
 
   const isLogin = mode === 'login';
@@ -57,7 +84,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="you@example.com" {...field} />
+                <Input type="email" placeholder="you@example.com" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,7 +97,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Megaphone, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,10 +12,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 export function SiteHeader() {
-  // Mock user authentication state
-  const isLoggedIn = false;
+  const { user } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  const isLoggedIn = !!user;
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,9 +39,11 @@ export function SiteHeader() {
           {/* Future navigation links can go here */}
         </nav>
         <div className="flex items-center space-x-2">
-          <Link href="/report">
-            <Button>Report an Issue</Button>
-          </Link>
+          {isLoggedIn && (
+            <Link href="/report">
+              <Button>Report an Issue</Button>
+            </Link>
+          )}
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -41,18 +53,23 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{user.email || 'My Account'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/')}>Dashboard</DropdownMenuItem>
                 <DropdownMenuItem>My Reports</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/login">
-              <Button variant="outline">Login</Button>
-            </Link>
+            <>
+              <Link href="/report">
+                <Button>Report an Issue</Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="outline">Login</Button>
+              </Link>
+            </>
           )}
         </div>
       </div>
