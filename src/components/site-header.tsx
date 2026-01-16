@@ -56,6 +56,7 @@ export function SiteHeader() {
                 <DropdownMenuLabel>{user.email || 'My Account'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push('/')}>Dashboard</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/admin')}>Admin</DropdownMenuItem>
                 <DropdownMenuItem>My Reports</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
