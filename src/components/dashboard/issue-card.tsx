@@ -15,16 +15,16 @@ interface IssueCardProps {
   onUpvote: (issueId: string) => void;
 }
 
-const severityConfig: Record<Severity, { color: string; icon: React.ReactNode }> = {
-  low: { color: 'bg-green-500', icon: <CheckCircle className="h-4 w-4" /> },
-  medium: { color: 'bg-yellow-500', icon: <AlertTriangle className="h-4 w-4" /> },
-  high: { color: 'bg-red-500', icon: <AlertTriangle className="h-4 w-4" /> },
+const severityConfig: Record<Severity, { className: string; icon: React.ReactNode }> = {
+  low: { className: 'bg-accent text-accent-foreground hover:bg-accent/80', icon: <CheckCircle className="h-4 w-4" /> },
+  medium: { className: 'bg-secondary text-secondary-foreground hover:bg-secondary/80', icon: <AlertTriangle className="h-4 w-4" /> },
+  high: { className: 'bg-destructive text-destructive-foreground hover:bg-destructive/80', icon: <AlertTriangle className="h-4 w-4" /> },
 };
 
-const statusConfig: Record<IssueStatus, { color: string; textColor: string; icon: React.ReactNode }> = {
-  Reported: { color: 'bg-blue-100', textColor: 'text-blue-800', icon: <Clock className="h-3 w-3" /> },
-  'In Progress': { color: 'bg-yellow-100', textColor: 'text-yellow-800', icon: <Clock className="h-3 w-3" /> },
-  Resolved: { color: 'bg-accent', textColor: 'text-accent-foreground', icon: <CheckCircle className="h-3 w-3" /> },
+const statusConfig: Record<IssueStatus, { className: string; icon: React.ReactNode }> = {
+  Reported: { className: 'bg-primary text-primary-foreground hover:bg-primary/80', icon: <Clock className="h-3 w-3" /> },
+  'In Progress': { className: 'bg-secondary text-secondary-foreground hover:bg-secondary/80', icon: <Clock className="h-3 w-3" /> },
+  Resolved: { className: 'bg-accent text-accent-foreground hover:bg-accent/80', icon: <CheckCircle className="h-3 w-3" /> },
 };
 
 export function IssueCard({ issue, onUpvote }: IssueCardProps) {
@@ -74,11 +74,11 @@ export function IssueCard({ issue, onUpvote }: IssueCardProps) {
                 </div>
             </div>
             <div className="flex items-center gap-2">
-                 <Badge className={cn("flex items-center gap-1.5 capitalize pl-2", currentStatus.color, currentStatus.textColor, 'hover:'+currentStatus.color)}>
+                 <Badge className={cn("flex items-center gap-1.5 capitalize pl-2", currentStatus.className)}>
                     {currentStatus.icon}
                     {issue.status}
                 </Badge>
-                <Badge className={cn("flex items-center gap-1.5 capitalize pl-2", currentSeverity.color, "text-white", 'hover:'+currentSeverity.color)}>
+                <Badge className={cn("flex items-center gap-1.5 capitalize pl-2", currentSeverity.className)}>
                     {currentSeverity.icon}
                     {issue.severity}
                 </Badge>

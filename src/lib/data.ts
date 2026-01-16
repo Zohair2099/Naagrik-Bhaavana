@@ -1,4 +1,8 @@
 import type { Issue } from './types';
+import { PlaceHolderImages } from './placeholder-images';
+
+const getImageUrl = (id: string) => PlaceHolderImages.find(img => img.id === id)?.imageUrl;
+const getImageHint = (id: string) => PlaceHolderImages.find(img => img.id === id)?.imageHint;
 
 export const mockIssues: Issue[] = [
   {
@@ -8,15 +12,15 @@ export const mockIssues: Issue[] = [
     location: 'Main St & Oak Ave',
     reporter: {
       name: 'Jane Doe',
-      avatarUrl: 'https://picsum.photos/seed/101/100/100',
+      avatarUrl: getImageUrl('user-avatar-1')!,
     },
     status: 'Reported',
     category: 'Pothole',
     severity: 'high',
     upvotes: 15,
     createdAt: '2024-05-20T10:00:00Z',
-    imageUrl: 'https://picsum.photos/seed/201/600/400',
-    imageHint: 'road pothole'
+    imageUrl: getImageUrl('issue-pothole'),
+    imageHint: getImageHint('issue-pothole'),
   },
   {
     id: '2',
@@ -25,15 +29,15 @@ export const mockIssues: Issue[] = [
     location: '2nd St & Pine St',
     reporter: {
       name: 'John Smith',
-      avatarUrl: 'https://picsum.photos/seed/102/100/100',
+      avatarUrl: getImageUrl('user-avatar-2')!,
     },
     status: 'In Progress',
     category: 'Street Lighting',
     severity: 'medium',
     upvotes: 8,
     createdAt: '2024-05-18T14:30:00Z',
-    imageUrl: 'https://picsum.photos/seed/202/600/400',
-    imageHint: 'street light'
+    imageUrl: getImageUrl('issue-light'),
+    imageHint: getImageHint('issue-light'),
   },
   {
     id: '3',
@@ -42,15 +46,15 @@ export const mockIssues: Issue[] = [
     location: 'City Park',
     reporter: {
       name: 'Emily White',
-      avatarUrl: 'https://picsum.photos/seed/103/100/100',
+      avatarUrl: getImageUrl('user-avatar-3')!,
     },
     status: 'Resolved',
     category: 'Garbage',
     severity: 'low',
     upvotes: 3,
     createdAt: '2024-05-15T09:00:00Z',
-    imageUrl: 'https://picsum.photos/seed/203/600/400',
-    imageHint: 'garbage can'
+    imageUrl: getImageUrl('issue-garbage'),
+    imageHint: getImageHint('issue-garbage'),
   },
   {
     id: '4',
@@ -59,14 +63,14 @@ export const mockIssues: Issue[] = [
     location: 'City Park Pond',
     reporter: {
       name: 'Michael Brown',
-      avatarUrl: 'https://picsum.photos/seed/104/100/100',
+      avatarUrl: getImageUrl('user-avatar-4')!,
     },
     status: 'Reported',
     category: 'Park Maintenance',
     severity: 'low',
     upvotes: 5,
     createdAt: '2024-05-21T11:45:00Z',
-    imageUrl: 'https://picsum.photos/seed/204/600/400',
-    imageHint: 'park bench'
+    imageUrl: getImageUrl('issue-park'),
+    imageHint: getImageHint('issue-park'),
   },
 ];
