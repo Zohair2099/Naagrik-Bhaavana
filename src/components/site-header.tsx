@@ -57,7 +57,7 @@ export function SiteHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push('/')}>Dashboard</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push('/admin')}>Admin</DropdownMenuItem>
-                <DropdownMenuItem>My Reports</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/my-reports')}>My Reports</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
