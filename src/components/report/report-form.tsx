@@ -115,7 +115,7 @@ export function ReportForm() {
                 imageUrl: demoImage?.imageUrl || '',
                 imageHint: demoImage?.imageHint || 'pothole road'
             };
-            await addDoc(collection(firestore, 'issues'), newIssue);
+            // Data is prepared but not saved to Firestore.
 
         } else {
             // Step 1: Upload Media
@@ -150,9 +150,8 @@ export function ReportForm() {
                 });
             }
 
-            // Step 3: Save to Firestore
-            setSubmissionStep('Saving report...');
-            const issuesCollectionRef = collection(firestore, 'issues');
+            // Step 3: Prepare data for Firestore (but don't save)
+            setSubmissionStep('Finalizing report...');
             const newIssue = {
                 userId: user.uid,
                 title: values.title,
@@ -169,12 +168,7 @@ export function ReportForm() {
                 imageUrl,
                 imageHint: categorization.imageHint
             };
-            try {
-                await addDoc(issuesCollectionRef, newIssue);
-            } catch (dbError) {
-                console.error("Save failed:", dbError);
-                throw new Error("Save Failed. Could not save the report to the database.");
-            }
+            // Data is prepared but not saved to Firestore.
         }
     
       // Step 4: Success
