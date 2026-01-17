@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useUser } from '@/firebase';
+import { useMemo } from 'react';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import type { Issue } from '@/lib/types';
-import { mockIssues as allMockIssues } from '@/lib/mock-data';
 import { IssueCard } from '@/components/dashboard/issue-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,18 +23,15 @@ function MyReportsSkeletons() {
 
 export function MyReportsClient() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
-  const [allIssues, setAllIssues] = useState<Issue[]>(allMockIssues);
+  const userIssuesQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, 'issues'), where('userId', '==', user.uid));
+  }, [firestore, user]);
 
-  const issues = useMemo(() => {
-    // For demo purposes, we'll assign the current logged-in user to 'user-1' from our mock data.
-    if (!user) return [];
-    return allIssues.filter(issue => issue.userId === 'user-1');
-  }, [user, allIssues]);
-
-  const isLoading = false;
-  const error = null;
+  const { data: issues, isLoading, error } = useCollection<Issue>(userIssuesQuery);
 
   const handleUpvote = (issueId: string) => {
     if (!user) {
@@ -45,11 +42,17 @@ export function MyReportsClient() {
       });
       return;
     }
-    setAllIssues(currentIssues => 
-      currentIssues.map(issue => 
-        issue.id === issueId ? { ...issue, upvotes: issue.upvotes + 1 } : issue
-      )
-    );
+    const issueRef = doc(firestore, 'issues', issueId);
+    updateDoc(issueRef, {
+      upvotes: increment(1)
+    }).catch(err => {
+        console.error("Upvote failed", err);
+        toast({
+            variant: "destructive",
+            title: "Upvote Failed",
+            description: "Could not update the upvote count."
+        })
+    });
   };
 
   // State 1: Still checking for user

@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { Issue } from '@/lib/types';
-import { mockIssues as initialMockIssues } from '@/lib/mock-data';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import {
@@ -25,20 +23,31 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Button } from '../ui/button';
 import Link from 'next/link';
+import { collection, doc, updateDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export function AdminClient() {
   const { user, isUserLoading } = useUser();
-  const [issues, setIssues] = useState<Issue[]>(initialMockIssues);
-  const isLoading = false;
-  const error = null;
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const issuesQuery = useMemoFirebase(() => collection(firestore, 'issues'), [firestore]);
+  const { data: issues, isLoading, error } = useCollection<Issue>(issuesQuery);
 
   const handleStatusUpdate = (issueId: string, newStatus: string) => {
     if (!user) return;
-    setIssues(currentIssues => 
-      currentIssues.map(issue => 
-        issue.id === issueId ? { ...issue, status: newStatus as Issue['status'], updatedAt: new Date().toISOString() } : issue
-      )
-    );
+    const issueRef = doc(firestore, 'issues', issueId);
+    updateDoc(issueRef, {
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+    }).catch(err => {
+        console.error("Status update failed", err);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update the issue status."
+        })
+    });
   };
 
   const getSeverityVariant = (severity: Issue['severity']) => {

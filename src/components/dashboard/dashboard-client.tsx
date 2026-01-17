@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, updateDoc, increment } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import type { Issue } from '@/lib/types';
-import { mockIssues as initialMockIssues } from '@/lib/mock-data';
 import { IssueCard } from './issue-card';
 import { Skeleton } from '../ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
@@ -56,11 +56,11 @@ function Hero() {
 
 export function DashboardClient() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
-  const [issues, setIssues] = useState<Issue[]>(initialMockIssues);
-  const isLoading = false;
-  const error = null;
+  const issuesQuery = useMemoFirebase(() => collection(firestore, 'issues'), [firestore]);
+  const { data: issues, isLoading, error } = useCollection<Issue>(issuesQuery);
 
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -92,11 +92,17 @@ export function DashboardClient() {
       });
       return;
     }
-    setIssues(currentIssues => 
-      currentIssues.map(issue => 
-        issue.id === issueId ? { ...issue, upvotes: issue.upvotes + 1 } : issue
-      )
-    );
+    const issueRef = doc(firestore, 'issues', issueId);
+    updateDoc(issueRef, {
+      upvotes: increment(1)
+    }).catch(err => {
+        console.error("Upvote failed", err);
+        toast({
+            variant: "destructive",
+            title: "Upvote Failed",
+            description: "Could not update the upvote count."
+        })
+    });
   };
 
   return (
