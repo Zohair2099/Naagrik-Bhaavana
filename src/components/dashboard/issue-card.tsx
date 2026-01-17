@@ -48,12 +48,14 @@ export function IssueCard({ issue, onUpvote }: IssueCardProps) {
     }
   }
 
+  const isForbiddenImage = issue.imageUrl && issue.imageUrl.includes('images.unsplash.com');
+
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <div className="group flex cursor-pointer flex-col rounded-2xl border bg-card p-0 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-primary overflow-hidden">
-          {issue.imageUrl ? (
+          {issue.imageUrl && !isForbiddenImage ? (
             <div className="relative h-40 w-full">
               <Image
                 src={issue.imageUrl}
@@ -114,7 +116,7 @@ export function IssueCard({ issue, onUpvote }: IssueCardProps) {
           <DialogTitle className="text-2xl font-headline">{issue.title}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          {issue.imageUrl && (
+          {issue.imageUrl && !isForbiddenImage && (
             <div className="relative h-64 w-full rounded-lg overflow-hidden">
                <Image src={issue.imageUrl} alt={issue.title} fill className="object-cover"/>
             </div>
