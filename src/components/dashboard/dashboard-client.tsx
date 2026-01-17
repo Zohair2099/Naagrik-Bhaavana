@@ -17,8 +17,11 @@ import { cn } from '@/lib/utils';
 const allStatuses = ['Reported', 'In Progress', 'Resolved'];
 
 
-function Hero({ totalIssues, resolvedIssues }: { totalIssues: number, resolvedIssues: number }) {
-  const successRate = totalIssues > 0 ? Math.round((resolvedIssues / totalIssues) * 100) : 0;
+function Hero() {
+  const totalReportsDisplay = "20 Lakh+";
+  const resolvedIssuesDisplay = "18 Lakh+";
+  const successRateDisplay = "90%";
+
   return (
     <div className="relative mb-8 overflow-hidden rounded-2xl bg-secondary p-8 text-secondary-foreground shadow-lg">
        <div className="relative z-10 max-w-3xl">
@@ -30,15 +33,15 @@ function Hero({ totalIssues, resolvedIssues }: { totalIssues: number, resolvedIs
           </p>
           <div className="flex flex-col sm:flex-row gap-8">
             <div className="text-center">
-              <div className="font-code text-5xl font-bold text-accent">{totalIssues}</div>
+              <div className="font-code text-5xl font-bold text-accent">{totalReportsDisplay}</div>
               <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Total Reports</div>
             </div>
             <div className="text-center">
-              <div className="font-code text-5xl font-bold text-accent">{resolvedIssues}</div>
+              <div className="font-code text-5xl font-bold text-accent">{resolvedIssuesDisplay}</div>
               <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Resolved Issues</div>
             </div>
              <div className="text-center">
-              <div className="font-code text-5xl font-bold text-accent">{successRate}%</div>
+              <div className="font-code text-5xl font-bold text-accent">{successRateDisplay}</div>
               <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Success Rate</div>
             </div>
           </div>
@@ -96,14 +99,10 @@ export function DashboardClient() {
       upvotes: increment(1),
     });
   };
-  
-  const totalIssues = issues?.length ?? 0;
-  const resolvedIssues = issues?.filter(i => i.status === 'Resolved').length ?? 0;
-
 
   return (
     <div className="space-y-6">
-      <Hero totalIssues={totalIssues} resolvedIssues={resolvedIssues} />
+      <Hero />
       
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
         <h2 className="text-3xl font-bold text-secondary font-headline">All Issues</h2>
