@@ -81,50 +81,38 @@ export function ReportForm() {
     }
 
     setIsSubmitting(true);
+    setSubmissionStep('');
 
-    let imageUrl = '';
-    let categorization: CategorizeIssueReportOutput;
-
-    // Step 1: Upload Media
     try {
+      // Step 1: Upload Media
+      let imageUrl = '';
       setSubmissionStep('Uploading media...');
       const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
       const storageRef = ref(storage, storagePath);
       await uploadBytes(storageRef, values.media);
       imageUrl = await getDownloadURL(storageRef);
-    } catch (uploadError) {
-      console.error('Media upload failed:', uploadError);
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: 'Could not upload your media file. Please check your connection and try again.',
-      });
-      setIsSubmitting(false);
-      setSubmissionStep('');
-      return;
-    }
 
-    // Step 2: AI Analysis
-    try {
-      setSubmissionStep('Analyzing issue...');
-      const photoDataUri = await fileToDataUri(values.media);
-      categorization = await categorizeIssueReport({
-        description: values.description || values.title,
-        location: values.location,
-        category: values.category,
-        photoDataUri,
-      });
-    } catch (aiError) {
-      console.warn("AI categorization failed, using fallback.", aiError);
-      categorization = { severity: 'low', imageHint: 'user provided' };
-      toast({
-        title: "AI Analysis Skipped",
-        description: "A default severity was assigned. Your report will still be submitted.",
-      });
-    }
+      // Step 2: AI Analysis
+      let categorization: CategorizeIssueReportOutput;
+      try {
+        setSubmissionStep('Analyzing issue...');
+        const photoDataUri = await fileToDataUri(values.media);
+        categorization = await categorizeIssueReport({
+          description: values.description || values.title,
+          location: values.location,
+          category: values.category,
+          photoDataUri,
+        });
+      } catch (aiError) {
+        console.warn("AI categorization failed, using fallback.", aiError);
+        categorization = { severity: 'low', imageHint: 'user provided' };
+        toast({
+          title: "AI Analysis Skipped",
+          description: "A default severity was assigned. Your report will still be submitted.",
+        });
+      }
 
-    // Step 3: Save to Firestore
-    try {
+      // Step 3: Save to Firestore
       setSubmissionStep('Saving report...');
       const issuesCollectionRef = collection(firestore, 'issues');
       const newIssue = {
@@ -136,37 +124,36 @@ export function ReportForm() {
         severity: categorization.severity,
         status: 'Reported' as const,
         upvotes: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         reporterName: user.displayName || user.email || 'Anonymous',
         reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
         imageUrl,
         imageHint: categorization.imageHint
       };
       await addDoc(issuesCollectionRef, newIssue);
-    } catch (dbError) {
-      console.error('Firestore save failed:', dbError);
+
+      // Step 4: Success
+      setSubmissionStep('Done!');
+      toast({
+        title: 'Issue Reported Successfully!',
+        description: "Thank you for helping improve your community.",
+      });
+
+      form.reset();
+      router.push('/my-reports');
+
+    } catch (error) {
+      console.error('Submission failed:', error);
       toast({
         variant: 'destructive',
-        title: 'Save Failed',
-        description: 'Could not save your report to the database. Please try again.',
+        title: 'Submission Failed',
+        description: 'Could not upload media or save the report. Please check your connection and file permissions.',
       });
+    } finally {
       setIsSubmitting(false);
       setSubmissionStep('');
-      return;
     }
-
-    // Step 4: Success
-    setSubmissionStep('Done!');
-    toast({
-      title: 'Issue Reported Successfully!',
-      description: "Thank you for helping improve your community.",
-    });
-
-    form.reset();
-    setIsSubmitting(false);
-    setSubmissionStep('');
-    router.push('/my-reports');
   };
 
   const handleGetLocation = () => {
@@ -297,7 +284,7 @@ export function ReportForm() {
         <FormField
           control={form.control}
           name="media"
-          render={({ field: { onChange, ...rest } }) => (
+          render={({ field: { onChange, value, ...rest } }) => (
              <FormItem>
                 <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
