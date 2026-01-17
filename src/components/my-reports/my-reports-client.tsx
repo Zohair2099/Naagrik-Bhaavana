@@ -88,7 +88,7 @@ export function MyReportsClient() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error Loading Your Issues</AlertTitle>
           <AlertDescription>
-            There was a problem fetching your data. Please try again later.
+            {error.message || 'There was a problem fetching your data. Please try again later.'}
           </AlertDescription>
         </Alert>
       )
@@ -100,13 +100,27 @@ export function MyReportsClient() {
       {issues && issues.length > 0 ? (
         issues.map((issue) => <IssueCard key={issue.id} issue={issue} onUpvote={handleUpvote} />)
       ) : (
-        <div className="col-span-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl h-64 bg-card">
+        <div className="col-span-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl min-h-[400px] bg-card">
           <p className="text-4xl">📝</p>
           <p className="text-lg font-medium mt-4">No reports yet.</p>
           <p className="text-muted-foreground">You haven't reported any issues. Let's change that!</p>
           <Link href="/report" className="mt-4">
             <Button>Report an Issue</Button>
           </Link>
+          <div className="mt-6 border-t pt-4 w-full max-w-md text-xs text-muted-foreground font-code text-left space-y-1">
+            <p className="font-bold text-center mb-2">Debugging Info</p>
+            <p>
+              <span className="font-semibold text-foreground">Status:</span> 
+              {isUserLoading ? 'Loading...' : (user ? 'Logged In' : 'Not Logged In')}
+            </p>
+            <p className="break-words">
+              <span className="font-semibold text-foreground">Checked User ID:</span> 
+              <span className="text-foreground">{user.uid}</span>
+            </p>
+            <p className="mt-2 text-wrap">
+              If you have submitted reports, ensure this ID matches the `userId` field of your documents in the 'issues' collection in your Firestore database.
+            </p>
+          </div>
         </div>
       )}
     </div>

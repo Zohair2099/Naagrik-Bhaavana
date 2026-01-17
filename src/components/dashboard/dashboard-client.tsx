@@ -155,7 +155,7 @@ export function DashboardClient() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error Loading Issues</AlertTitle>
           <AlertDescription>
-            There was a problem fetching the issue data. It's possible you don't have permission or there's a network issue.
+            {error.message || "There was a problem fetching the issue data. It's possible you don't have permission or there's a network issue."}
           </AlertDescription>
         </Alert>
       )}

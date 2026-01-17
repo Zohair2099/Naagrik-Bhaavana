@@ -89,7 +89,7 @@ export function AdminClient() {
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Error Loading Issues</AlertTitle>
         <AlertDescription>
-          There was a problem fetching the issue data. You may not have the required permissions.
+          {error.message || 'There was a problem fetching the issue data. You may not have the required permissions.'}
         </AlertDescription>
       </Alert>
     );
