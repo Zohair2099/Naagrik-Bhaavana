@@ -17,7 +17,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, useFirebaseApp, addDocumentNonBlocking } from '@/firebase';
-import { categorizeIssueReport } from '@/ai/flows/categorize-issue-reports';
+import { categorizeIssueReport, CategorizeIssueReportOutput } from '@/ai/flows/categorize-issue-reports';
 
 const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -85,33 +85,41 @@ export function ReportForm() {
     setIsLoading(true);
 
     try {
-      let imageUrl: string | undefined;
-      let imageHint: string | undefined;
-      
-      const photoDataUri = await fileToDataUri(values.media);
+      // 1. Upload media first.
       const storage = getStorage(firebaseApp);
       const storageRef = ref(storage, `issues/${user.uid}/${Date.now()}-${values.media.name}`);
-      
       const uploadResult = await uploadBytes(storageRef, values.media);
-      imageUrl = await getDownloadURL(uploadResult.ref);
+      const imageUrl = await getDownloadURL(uploadResult.ref);
 
-      const categorization = await categorizeIssueReport({
-        description: values.description || values.title, // Use title if description is empty
-        location: values.location,
-        category: values.category,
-        photoDataUri: photoDataUri,
-      });
+      // 2. Perform AI categorization with a robust fallback mechanism.
+      let categorization: CategorizeIssueReportOutput;
+      try {
+        const photoDataUri = await fileToDataUri(values.media);
+        categorization = await categorizeIssueReport({
+          description: values.description || values.title,
+          location: values.location,
+          category: values.category,
+          photoDataUri: photoDataUri,
+        });
+      } catch (aiError) {
+        console.error("AI categorization failed, using fallback values.", aiError);
+        // If AI fails, we fall back to sensible defaults so the report can still be submitted.
+        categorization = { severity: 'low', imageHint: 'user provided' };
+        toast({
+          title: "Report Submitted without Full AI Analysis",
+          description: "A default severity ('low') has been assigned. An admin will review it shortly.",
+        });
+      }
       
-      imageHint = categorization.imageHint;
-
+      // 3. Create and save the new issue document.
       const issuesCollectionRef = collection(firestore, 'issues');
       const newIssue = {
         userId: user.uid,
         title: values.title,
         description: values.description || 'No description provided.',
         location: values.location,
-        category: values.category, // Use user-selected category
-        severity: categorization.severity, // Use AI-assessed severity
+        category: values.category,
+        severity: categorization.severity,
         status: 'Reported' as const,
         upvotes: 0,
         createdAt: new Date().toISOString(),
@@ -119,11 +127,12 @@ export function ReportForm() {
         reporterName: user.displayName || user.email || 'Anonymous',
         reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
         imageUrl,
-        imageHint
+        imageHint: categorization.imageHint
       };
 
       addDocumentNonBlocking(issuesCollectionRef, newIssue);
       
+      // 4. Notify user of success and redirect.
       toast({
         title: 'Issue Reported Successfully!',
         description: `Thank you for your submission. Your report is now live.`,
@@ -133,11 +142,12 @@ export function ReportForm() {
       router.push('/');
 
     } catch (error) {
+      // This outer catch block will now primarily handle critical failures like file upload errors.
       console.error('Error submitting issue:', error);
       toast({
         variant: 'destructive',
         title: 'Submission Failed',
-        description: 'An unexpected error occurred. Please try again.',
+        description: 'Could not upload media or save the report. Please check your file and try again.',
       });
     } finally {
       setIsLoading(false);
