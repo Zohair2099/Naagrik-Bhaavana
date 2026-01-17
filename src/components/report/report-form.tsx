@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { collection } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, AlertTriangle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +40,7 @@ export function ReportForm() {
   const router = useRouter();
   const firestore = useFirestore();
   const firebaseApp = useFirebaseApp();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -154,6 +155,27 @@ export function ReportForm() {
       }
     );
   };
+  
+  if (isUserLoading) {
+    return (
+      <div className="flex items-center justify-center p-8 min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[400px]">
+          <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium">Authentication Required</p>
+          <p className="text-muted-foreground mb-4">You need to be logged in to report an issue.</p>
+          <Link href="/login">
+            <Button>Login to Report</Button>
+          </Link>
+      </div>
+    )
+  }
 
   return (
     <Form {...form}>
