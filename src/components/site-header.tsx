@@ -52,12 +52,12 @@ export function SiteHeader() {
         </div>
 
         <nav className="hidden md:flex flex-1 items-center space-x-2">
-            <Link href="/" legacyBehavior passHref>
-                <Button variant="ghost">Dashboard</Button>
-            </Link>
-            <Link href="/report" legacyBehavior passHref>
-                <Button variant="ghost">Report Issue</Button>
-            </Link>
+            <Button variant="ghost" asChild>
+                <Link href="/">Dashboard</Link>
+            </Button>
+            <Button variant="ghost" asChild>
+                <Link href="/report">Report Issue</Link>
+            </Button>
         </nav>
 
         <div className="flex items-center space-x-2">
@@ -106,12 +106,12 @@ export function SiteHeader() {
             </DropdownMenu>
           ) : (
             <>
-              <Link href="/login" legacyBehavior passHref>
-                <Button variant="ghost">Login</Button>
-              </Link>
-              <Link href="/signup" legacyBehavior passHref>
-                <Button>Sign Up</Button>
-              </Link>
+              <Button variant="ghost" asChild>
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/signup">Sign Up</Link>
+              </Button>
             </>
           )}
         </div>
