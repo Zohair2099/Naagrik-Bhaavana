@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -12,12 +13,15 @@ import { MapPin, Loader2, AlertTriangle, UploadCloud, FileCheck2 } from 'lucide-
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, useStorage } from '@/firebase';
 import { categorizeIssueReport, CategorizeIssueReportOutput } from '@/ai/flows/categorize-issue-reports';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 
 const MAX_FILE_SIZE_MB = 50;
@@ -42,6 +46,12 @@ const formSchema = z.object({
     ),
 });
 
+// A more lenient schema for demo mode where a file is not required
+const demoFormSchema = formSchema.extend({
+    media: formSchema.shape.media.optional(),
+});
+
+
 const fileToDataUri = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -58,12 +68,13 @@ export function ReportForm() {
   const storage = useStorage();
   const { user, isUserLoading } = useUser();
 
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStep, setSubmissionStep] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(isDemoMode ? demoFormSchema : formSchema),
     defaultValues: { title: '', description: '', location: '' },
   });
   
@@ -84,54 +95,88 @@ export function ReportForm() {
     setSubmissionStep('');
 
     try {
-      // Step 1: Upload Media
-      setSubmissionStep('Uploading media...');
-      const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
-      const storageRef = ref(storage, storagePath);
-      await uploadBytes(storageRef, values.media);
-      const imageUrl = await getDownloadURL(storageRef);
+        if(isDemoMode) {
+            setSubmissionStep('Submitting demo report...');
+            const demoImage = PlaceHolderImages.find(img => img.id === 'demo-pothole');
+            
+            const newIssue = {
+                userId: user.uid,
+                title: values.title || "Demo: Major Pothole on Market Street",
+                description: values.description || "This is a sample issue report created in demo mode. The pothole is large and causing issues for traffic.",
+                location: values.location || "Market Street, Downtown",
+                category: values.category || 'Pothole',
+                severity: 'medium' as const,
+                status: 'Reported' as const,
+                upvotes: Math.floor(Math.random() * 25),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                reporterName: user.displayName || user.email || 'Anonymous',
+                reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
+                imageUrl: demoImage?.imageUrl || '',
+                imageHint: demoImage?.imageHint || 'pothole road'
+            };
+            await addDoc(collection(firestore, 'issues'), newIssue);
 
-      // Step 2: AI Analysis (with fallback)
-      let categorization: CategorizeIssueReportOutput;
-      try {
-        setSubmissionStep('Analyzing issue...');
-        const photoDataUri = await fileToDataUri(values.media);
-        categorization = await categorizeIssueReport({
-          description: values.description || values.title,
-          location: values.location,
-          category: values.category,
-          photoDataUri,
-        });
-      } catch (aiError) {
-        console.warn("AI categorization failed, using fallback.", aiError);
-        categorization = { severity: 'low', imageHint: 'user provided' };
-        toast({
-          title: "AI Analysis Skipped",
-          description: "A default severity was assigned. Continuing submission...",
-        });
-      }
+        } else {
+            // Step 1: Upload Media
+            setSubmissionStep('Uploading media...');
+            const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
+            const storageRef = ref(storage, storagePath);
+            try {
+                await uploadBytes(storageRef, values.media);
+            } catch (uploadError) {
+                console.error("Upload failed:", uploadError);
+                throw new Error("Upload Failed. Please check your network or file permissions.");
+            }
+            const imageUrl = await getDownloadURL(storageRef);
 
-      // Step 3: Save to Firestore
-      setSubmissionStep('Saving report...');
-      const issuesCollectionRef = collection(firestore, 'issues');
-      const newIssue = {
-        userId: user.uid,
-        title: values.title,
-        description: values.description || 'No description provided.',
-        location: values.location,
-        category: values.category,
-        severity: categorization.severity,
-        status: 'Reported' as const,
-        upvotes: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        reporterName: user.displayName || user.email || 'Anonymous',
-        reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
-        imageUrl,
-        imageHint: categorization.imageHint
-      };
-      await addDoc(issuesCollectionRef, newIssue);
+            // Step 2: AI Analysis (with fallback)
+            let categorization: CategorizeIssueReportOutput;
+            try {
+                setSubmissionStep('Analyzing issue...');
+                const photoDataUri = await fileToDataUri(values.media);
+                categorization = await categorizeIssueReport({
+                description: values.description || values.title,
+                location: values.location,
+                category: values.category,
+                photoDataUri,
+                });
+            } catch (aiError) {
+                console.warn("AI categorization failed, using fallback.", aiError);
+                categorization = { severity: 'low', imageHint: 'user provided' };
+                toast({
+                title: "AI Analysis Skipped",
+                description: "A default severity was assigned.",
+                });
+            }
 
+            // Step 3: Save to Firestore
+            setSubmissionStep('Saving report...');
+            const issuesCollectionRef = collection(firestore, 'issues');
+            const newIssue = {
+                userId: user.uid,
+                title: values.title,
+                description: values.description || 'No description provided.',
+                location: values.location,
+                category: values.category,
+                severity: categorization.severity,
+                status: 'Reported' as const,
+                upvotes: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                reporterName: user.displayName || user.email || 'Anonymous',
+                reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
+                imageUrl,
+                imageHint: categorization.imageHint
+            };
+            try {
+                await addDoc(issuesCollectionRef, newIssue);
+            } catch (dbError) {
+                console.error("Save failed:", dbError);
+                throw new Error("Save Failed. Could not save the report to the database.");
+            }
+        }
+    
       // Step 4: Success
       setSubmissionStep('Done!');
       toast({
@@ -142,15 +187,14 @@ export function ReportForm() {
       form.reset();
       router.push('/my-reports');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submission process failed:', error);
       toast({
         variant: 'destructive',
         title: 'Submission Failed',
-        description: 'An unexpected error occurred. Please check your network or permissions.',
+        description: error.message || 'An unexpected error occurred. Please try again.',
       });
     } finally {
-      // This block will always execute, ensuring the loading state is reset.
       setIsSubmitting(false);
       setSubmissionStep('');
     }
@@ -284,15 +328,16 @@ export function ReportForm() {
         <FormField
           control={form.control}
           name="media"
-          render={({ field: { onChange, ...rest } }) => (
+          render={({ field: { onChange, value, ...rest } }) => (
              <FormItem>
-                <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>Attach Photo or Video {!isDemoMode && <span className="text-destructive">*</span>}</FormLabel>
                 <FormControl>
                     <label htmlFor="media-upload" className={cn(
                         "group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-background p-6 text-center transition-colors hover:border-primary hover:bg-primary/5",
-                        mediaFile && "border-solid border-primary bg-primary/5"
+                        mediaFile && "border-solid border-primary bg-primary/5",
+                        isDemoMode && "bg-muted/50 cursor-not-allowed opacity-60"
                     )}>
-                        {mediaFile ? (
+                        {mediaFile && !isDemoMode ? (
                             <>
                                 <FileCheck2 className="h-10 w-10 text-primary" />
                                 <p className="mt-2 text-sm font-medium text-primary">{mediaFile.name}</p>
@@ -300,11 +345,12 @@ export function ReportForm() {
                             </>
                         ) : (
                             <>
-                                <UploadCloud className="h-10 w-10 text-muted-foreground group-hover:text-primary" />
+                                <UploadCloud className={cn("h-10 w-10 text-muted-foreground", !isDemoMode && "group-hover:text-primary")} />
                                 <p className="mt-2 text-sm text-muted-foreground">
-                                    <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                                    <span className={cn("font-semibold", !isDemoMode && "text-primary")}>Click to upload</span> or drag and drop
                                 </p>
                                 <p className="text-xs text-muted-foreground">PNG, JPG, MP4, or MOV (max {MAX_FILE_SIZE_MB}MB)</p>
+                                {isDemoMode && <p className="mt-2 text-xs font-semibold text-destructive">Disabled in Demo Mode</p>}
                             </>
                         )}
                         <Input 
@@ -313,6 +359,7 @@ export function ReportForm() {
                           className="sr-only"
                           accept="image/jpeg,image/png,video/mp4,video/quicktime"
                           onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                          disabled={isDemoMode}
                           {...rest}
                         />
                     </label>
@@ -321,6 +368,17 @@ export function ReportForm() {
             </FormItem>
           )}
         />
+
+        <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Switch id="demo-mode" checked={isDemoMode} onCheckedChange={setIsDemoMode} />
+              <Label htmlFor="demo-mode" className="cursor-pointer">Enable Demo Mode</Label>
+            </div>
+            <FormDescription>
+                Bypass media upload and AI analysis for a quick, successful submission.
+            </FormDescription>
+        </div>
+
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? (
