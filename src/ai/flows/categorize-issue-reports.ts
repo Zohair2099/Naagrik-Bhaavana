@@ -15,6 +15,7 @@ import {z} from 'genkit';
 const CategorizeIssueReportInputSchema = z.object({
   description: z.string().describe('The description of the issue report.'),
   location: z.string().describe('The location of the issue.'),
+  category: z.string().describe('The user-selected category of the issue.'),
   photoDataUri: z
     .string()
     .optional()
@@ -25,7 +26,6 @@ const CategorizeIssueReportInputSchema = z.object({
 export type CategorizeIssueReportInput = z.infer<typeof CategorizeIssueReportInputSchema>;
 
 const CategorizeIssueReportOutputSchema = z.object({
-  category: z.string().describe('The category of the issue (e.g., Pothole, Streetlight, Garbage, Graffiti).'),
   severity: z.enum(['low', 'medium', 'high']).describe('The severity of the issue.'),
   imageHint: z.string().optional().describe('A two-word hint for the image content, used for accessibility and searching for a better image.'),
 });
@@ -39,8 +39,9 @@ const categorizeIssueReportPrompt = ai.definePrompt({
   name: 'categorizeIssueReportPrompt',
   input: {schema: CategorizeIssueReportInputSchema},
   output: {schema: CategorizeIssueReportOutputSchema},
-  prompt: `You are an AI assistant helping to categorize civic issue reports. Based on the description, location, and photo provided, determine the most appropriate category and severity for the issue. Also provide a two-word "image hint" that describes the main subject of the photo.
+  prompt: `You are an AI assistant helping to assess civic issue reports. The user has already categorized the issue. Based on the description, location, category, and photo provided, determine the severity of the issue. Also provide a two-word "image hint" that describes the main subject of the photo.
 
+Category: {{{category}}}
 Description: {{{description}}}
 Location: {{{location}}}
 {{#if photoDataUri}}

@@ -98,6 +98,7 @@ export function ReportForm() {
       const categorization = await categorizeIssueReport({
         description: values.description || values.title, // Use title if description is empty
         location: values.location,
+        category: values.category,
         photoDataUri: photoDataUri,
       });
       
