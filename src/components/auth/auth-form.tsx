@@ -50,7 +50,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }, [user, router, mode, toast]);
 
 
-  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     const isLogin = mode === 'login';
     try {
