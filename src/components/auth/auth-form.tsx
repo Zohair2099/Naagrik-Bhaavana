@@ -63,10 +63,21 @@ export function AuthForm({ mode }: AuthFormProps) {
     } catch (error) {
       const authError = error as AuthError;
       console.error(authError);
+
+      let errorMessage = authError.message || 'An unexpected error occurred.';
+      if (
+        isLogin &&
+        (authError.code === 'auth/user-not-found' ||
+          authError.code === 'auth/wrong-password' ||
+          authError.code === 'auth/invalid-credential')
+      ) {
+        errorMessage = 'Wrong email or password.';
+      }
+
       toast({
         variant: 'destructive',
-        title: 'Authentication Error',
-        description: authError.message || 'An unexpected error occurred.',
+        title: isLogin ? 'Login Failed' : 'Sign Up Failed',
+        description: errorMessage,
       });
       setIsLoading(false);
     }
