@@ -20,8 +20,8 @@ service cloud.firestore {
 
     match /issues/{issueId} {
       allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn(); // Allows fields like 'upvotes' or 'status' to be updated by logged-in users.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn(); // Allows fields like 'upvotes' or 'status' to be updated.
       allow delete: if false; // Deletion might be an admin-only task.
     }
   }

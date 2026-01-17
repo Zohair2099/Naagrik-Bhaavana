@@ -3,86 +3,44 @@
     {
       "id": "user-avatar-1",
       "description": "Avatar for a user",
-      "imageUrl": "https://images.unsplash.com/flagged/photo-1595514191830-3e96a518989b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29uJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzY4NTYwNDczfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg1NjA0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person portrait"
     },
     {
       "id": "user-avatar-2",
       "description": "Avatar for another user",
-      "imageUrl": "https://images.unsplash.com/photo-1590086782792-42dd2350140d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg1NjA0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg1NjA0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person portrait"
     },
     {
       "id": "user-avatar-3",
       "description": "Avatar for a third user",
-      "imageUrl": "https://images.unsplash.com/photo-1521119989659-a83eee488004?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg1NjA0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg1NjA0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person portrait"
     },
     {
       "id": "user-avatar-4",
       "description": "Avatar for a fourth user",
-      "imageUrl": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg1NjA0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg1NjA0NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person portrait"
     },
     {
-      "id": "issue-pothole",
-      "description": "Image of a pothole",
-      "imageUrl": "https://images.unsplash.com/photo-1720593445963-05149785a7a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxyb2FkJTIwcG90aG9sZXxlbnwwfHx8fDE3Njg1ODc4Nzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "road pothole"
-    },
-    {
-      "id": "issue-light",
-      "description": "Image of a broken streetlight",
-      "imageUrl": "https://images.unsplash.com/photo-1543518360-68b9612a7c8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdHJlZXQlMjBsaWdodHxlbnwwfHx8fDE3Njg1NTg4MDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "street light"
-    },
-    {
-      "id": "issue-garbage",
-      "description": "Image of overflowing garbage",
-      "imageUrl": "https://images.unsplash.com/photo-1605600659908-0ef719419d41?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnYXJiYWdlJTIwY2FufGVufDB8fHx8MTc2ODU4Nzg3N3ww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "garbage can"
-    },
-    {
-      "id": "issue-park",
-      "description": "Image of a damaged park bench",
-      "imageUrl": "https://images.unsplash.com/photo-1697841285032-3ca25f47e6f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGFyayUyMGJlbmNofGVufDB8fHx8MTc2ODQ4OTUzM3ww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "park bench"
-    },
-    {
       "id": "carousel-image-1",
-      "description": "Police checking for drunk drivers.",
-      "imageUrl": "https://media.telanganatoday.com/wp-content/uploads/2025/04/Hyderabad-Traffic-police-caught-1062-drunk-drivers-during-weeklong-check.jpg",
-      "imageHint": "police check"
+      "description": "A clean city street after a community cleanup event.",
+      "imageUrl": "https://images.unsplash.com/photo-1466500419182-8602dc906b51?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjaXR5JTIwc3RyZWV0fGVufDB8fHx8MTc2ODU1NjQ1NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "city street"
     },
     {
-      "id": "issue-water-leak",
-      "description": "Image of a water leak",
-      "imageUrl": "https://images.unsplash.com/photo-1648731981193-161b6c728d64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8d2F0ZXIlMjBsZWFrfGVufDB8fHx8MTc2ODYzNTQzNnww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "water leak"
+      "id": "carousel-image-2",
+      "description": "Workers repairing a pothole on a city road.",
+      "imageUrl": "https://images.unsplash.com/photo-1605475723782-a93ee7d7e74d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyb2FkJTIwd29ya3xlbnwwfHx8fDE3Njg2MjA2OTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "road work"
     },
     {
-      "id": "issue-traffic-light",
-      "description": "Image of a traffic light",
-      "imageUrl": "https://images.unsplash.com/photo-1584649525122-8d6895492a5d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx0cmFmZmljJTIwbGlnaHR8ZW58MHx8fHwxNzY4NTUyODI2fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "traffic light"
-    },
-    {
-      "id": "issue-illegal-dumping",
-      "description": "Image of illegal dumping",
-      "imageUrl": "https://images.unsplash.com/photo-1762542530803-18c4223557dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxpbGxlZ2FsJTIwZHVtcGluZ3xlbnwwfHx8fDE3Njg2MzU0MzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "illegal dumping"
-    },
-    {
-      "id": "issue-bike-path",
-      "description": "Image of a cracked bike path",
-      "imageUrl": "https://images.unsplash.com/photo-1656166714101-42ea748e3778?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxiaWtlJTIwcGF0aHxlbnwwfHx8fDE3Njg2MzU0MzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "bike path"
-    },
-    {
-      "id": "issue-fallen-tree",
-      "description": "Image of a fallen tree",
-      "imageUrl": "https://images.unsplash.com/photo-1620239864516-c7513ed7eab2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYWxsZW4lMjB0cmVlfGVufDB8fHx8MTc2ODU4NDkxNHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fallen tree"
+      "id": "carousel-image-3",
+      "description": "A newly installed and brightly lit streetlight at night.",
+      "imageUrl": "https://images.unsplash.com/photo-1565199975350-a723a63c053f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c3RyZWV0JTIwbGlnaHR8ZW58MHx8fHwxNzY4NTU4ODA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "street light"
     }
   ]
 }

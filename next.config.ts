@@ -36,34 +36,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.telanganatribune.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'propertyadviser.in',
-      },
-      {
-        protocol: 'https',
-        hostname: 'static.swarajyamag.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'newsmeter.in',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.telanganatoday.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'media.telanganatoday.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'assets.thehansindia.com',
-      },
-      {
-        protocol: 'https',
         hostname: 'api.dicebear.com',
       },
     ],

@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { collection, addDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { MapPin, Loader2, AlertTriangle } from 'lucide-react';
+import { MapPin, Loader2, AlertTriangle, UploadCloud, FileCheck2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, useFirebaseApp } from '@/firebase';
 import { categorizeIssueReport, CategorizeIssueReportOutput } from '@/ai/flows/categorize-issue-reports';
+import { cn } from '@/lib/utils';
 
 const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-const ACCEPTED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime']; // .mov is video/quicktime
+const ACCEPTED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'];
 
 const formSchema = z.object({
   title: z.string().min(5, 'A title of at least 5 characters is required.'),
@@ -41,8 +42,6 @@ const formSchema = z.object({
     ),
 });
 
-
-// Helper to convert a file to a data URI
 const fileToDataUri = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -59,17 +58,16 @@ export function ReportForm() {
   const firebaseApp = useFirebaseApp();
   const { user, isUserLoading } = useUser();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStep, setSubmissionStep] = useState('');
   const [isLocating, setIsLocating] = useState(false);
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      location: '',
-    },
+    defaultValues: { title: '', description: '', location: '' },
   });
+  
+  const mediaFile = form.watch('media');
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) {
@@ -82,42 +80,53 @@ export function ReportForm() {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
 
+    let imageUrl = '';
+    let categorization: CategorizeIssueReportOutput;
+
+    // Step 1: Upload Media
     try {
-      // Step 1: Upload Media to Firebase Storage
-      let imageUrl = '';
-      try {
-        const storage = getStorage(firebaseApp);
-        const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
-        const storageRef = ref(storage, storagePath);
-        await uploadBytes(storageRef, values.media);
-        imageUrl = await getDownloadURL(storageRef);
-      } catch (uploadError) {
-        console.error('Media upload failed:', uploadError);
-        throw new Error('Could not upload your media file. Please check your connection and try again.');
-      }
+      setSubmissionStep('Uploading media...');
+      const storage = getStorage(firebaseApp);
+      const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, values.media);
+      imageUrl = await getDownloadURL(storageRef);
+    } catch (uploadError) {
+      console.error('Media upload failed:', uploadError);
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: 'Could not upload your media file. Please check your connection and try again.',
+      });
+      setIsSubmitting(false);
+      setSubmissionStep('');
+      return;
+    }
 
-      // Step 2: AI Categorization (with fallback for robustness)
-      let categorization: CategorizeIssueReportOutput;
-      try {
-        const photoDataUri = await fileToDataUri(values.media);
-        categorization = await categorizeIssueReport({
-          description: values.description || values.title,
-          location: values.location,
-          category: values.category,
-          photoDataUri,
-        });
-      } catch (aiError) {
-        console.warn("AI categorization failed, using fallback.", aiError);
-        categorization = { severity: 'low', imageHint: 'user provided' };
-        toast({
-          title: "AI Analysis Skipped",
-          description: "Default severity assigned. Your report will be reviewed by an admin.",
-        });
-      }
+    // Step 2: AI Analysis
+    try {
+      setSubmissionStep('Analyzing issue...');
+      const photoDataUri = await fileToDataUri(values.media);
+      categorization = await categorizeIssueReport({
+        description: values.description || values.title,
+        location: values.location,
+        category: values.category,
+        photoDataUri,
+      });
+    } catch (aiError) {
+      console.warn("AI categorization failed, using fallback.", aiError);
+      categorization = { severity: 'low', imageHint: 'user provided' };
+      toast({
+        title: "AI Analysis Skipped",
+        description: "A default severity was assigned. Your report will still be submitted.",
+      });
+    }
 
-      // Step 3: Save the complete report to Firestore
+    // Step 3: Save to Firestore
+    try {
+      setSubmissionStep('Saving report...');
       const issuesCollectionRef = collection(firestore, 'issues');
       const newIssue = {
         userId: user.uid,
@@ -128,34 +137,37 @@ export function ReportForm() {
         severity: categorization.severity,
         status: 'Reported' as const,
         upvotes: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
         reporterName: user.displayName || user.email || 'Anonymous',
         reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
         imageUrl,
         imageHint: categorization.imageHint
       };
       await addDoc(issuesCollectionRef, newIssue);
-
-      // Step 4: Success feedback and redirect
-      toast({
-        title: 'Issue Reported Successfully!',
-        description: "Thank you for your submission. You're being redirected.",
-      });
-
-      form.reset();
-      router.push('/my-reports');
-
-    } catch (error: any) {
-      console.error('Submission failed:', error);
+    } catch (dbError) {
+      console.error('Firestore save failed:', dbError);
       toast({
         variant: 'destructive',
-        title: 'Submission Failed',
-        description: error.message || 'Could not save the report. Please try again.',
+        title: 'Save Failed',
+        description: 'Could not save your report to the database. Please try again.',
       });
-    } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
+      setSubmissionStep('');
+      return;
     }
+
+    // Step 4: Success
+    setSubmissionStep('Done!');
+    toast({
+      title: 'Issue Reported Successfully!',
+      description: "Thank you for helping improve your community.",
+    });
+
+    form.reset();
+    setIsSubmitting(false);
+    setSubmissionStep('');
+    router.push('/my-reports');
   };
 
   const handleGetLocation = () => {
@@ -282,29 +294,52 @@ export function ReportForm() {
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="media"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { onChange, ...rest } }) => (
              <FormItem>
-              <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
-              <FormControl>
-                <Input 
-                  type="file" 
-                  accept="image/jpeg,image/png,video/mp4,video/quicktime"
-                  onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
-                  className="pt-2 file:text-primary file:cursor-pointer"
-                />
-              </FormControl>
-              <FormDescription>A picture or video is required. Max file size: {MAX_FILE_SIZE_MB}MB.</FormDescription>
-              <FormMessage />
+                <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                    <label htmlFor="media-upload" className={cn(
+                        "group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-background p-6 text-center transition-colors hover:border-primary hover:bg-primary/5",
+                        mediaFile && "border-solid border-primary bg-primary/5"
+                    )}>
+                        {mediaFile ? (
+                            <>
+                                <FileCheck2 className="h-10 w-10 text-primary" />
+                                <p className="mt-2 text-sm font-medium text-primary">{mediaFile.name}</p>
+                                <p className="text-xs text-muted-foreground">Click to change file</p>
+                            </>
+                        ) : (
+                            <>
+                                <UploadCloud className="h-10 w-10 text-muted-foreground group-hover:text-primary" />
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                                </p>
+                                <p className="text-xs text-muted-foreground">PNG, JPG, MP4, or MOV (max {MAX_FILE_SIZE_MB}MB)</p>
+                            </>
+                        )}
+                        <Input 
+                          id="media-upload"
+                          type="file" 
+                          className="sr-only"
+                          accept="image/jpeg,image/png,video/mp4,video/quicktime"
+                          onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                          {...rest}
+                        />
+                    </label>
+                </FormControl>
+                <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? (
+
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting Report...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {submissionStep || 'Submitting...'}
             </>
           ) : (
             'Send Report'
