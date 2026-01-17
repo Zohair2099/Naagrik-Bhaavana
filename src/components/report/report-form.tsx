@@ -108,15 +108,15 @@ export function ReportForm() {
                     imageHint = 'user provided'; // We didn't run AI, so use a generic hint.
                 } catch (e) {
                     console.warn('Could not read demo file, falling back to placeholder.', e);
-                    const demoImage = PlaceHolderImages.find(img => img.id === 'demo-pothole');
+                    const demoImage = PlaceHolderImages.find(img => img.id === 'carousel-image-4');
                     imageUrl = demoImage?.imageUrl || '';
-                    imageHint = demoImage?.imageHint || 'pothole road';
+                    imageHint = demoImage?.imageHint || 'damaged road';
                 }
             } else {
                 // If no file was selected in demo mode, use the default placeholder.
-                const demoImage = PlaceHolderImages.find(img => img.id === 'demo-pothole');
+                const demoImage = PlaceHolderImages.find(img => img.id === 'carousel-image-4');
                 imageUrl = demoImage?.imageUrl || '';
-                imageHint = demoImage?.imageHint || 'pothole road';
+                imageHint = demoImage?.imageHint || 'damaged road';
             }
             
             const newIssue = {
@@ -192,15 +192,10 @@ export function ReportForm() {
                 imageHint
             };
             
-            try {
-                await addDoc(collection(firestore, 'issues'), newIssue);
-            } catch (dbError) {
-                console.error("Save to Firestore failed:", dbError);
-                throw new Error("Save Failed. Could not save the report to the database. Check Firestore rules.");
-            }
+            // Step 4: No Firebase saving, as per user request
         }
     
-      // Step 4: Success
+      // Step 5: Success
       setSubmissionStep('Done!');
       toast({
         title: 'Issue Reported Successfully!',
