@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -22,7 +23,7 @@ export function SiteHeader() {
   const router = useRouter();
   const isLoggedIn = !!user;
 
-  const isGovernmentEmployee = user?.email === '160923733200@lords.aac.in';
+  const isAdminUser = user?.email === '160923733200@gmail.com';
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -85,15 +86,15 @@ export function SiteHeader() {
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     <span>My Reports</span>
                   </DropdownMenuItem>
-                  {isGovernmentEmployee && (
+                  {isAdminUser && (
                     <>
-                      <DropdownMenuItem onClick={() => router.push('/settings')}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => router.push('/admin')}>
                         <Shield className="mr-2 h-4 w-4" />
                         <span>Admin Panel</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/settings')}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
                       </DropdownMenuItem>
                     </>
                   )}

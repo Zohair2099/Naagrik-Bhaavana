@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -48,7 +49,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         title: mode === 'login' ? 'Logged In!' : 'Account Created!',
         description: "You're being redirected...",
       });
-      if (mode === 'login' && isGovernmentEmployee && user.email === '160923733200@lords.aac.in') {
+      if (mode === 'login' && isGovernmentEmployee && user.email === '160923733200@gmail.com') {
         router.push('/admin');
       } else {
         router.push('/');
