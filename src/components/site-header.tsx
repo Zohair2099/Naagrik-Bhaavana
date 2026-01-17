@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { LayoutDashboard, LogOut, User as UserIcon, Shield } from 'lucide-react';
+import { LayoutDashboard, LogOut, User as UserIcon, Shield, Settings } from 'lucide-react';
 
 export function SiteHeader() {
   const { user } = useUser();
@@ -82,6 +82,10 @@ export function SiteHeader() {
                   <DropdownMenuItem onClick={() => router.push('/my-reports')}>
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     <span>My Reports</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/admin')}>
                     <Shield className="mr-2 h-4 w-4" />
