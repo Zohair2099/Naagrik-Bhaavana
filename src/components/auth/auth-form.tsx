@@ -17,6 +17,8 @@ import {
   signInWithEmailAndPassword,
   AuthError,
 } from 'firebase/auth';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -29,6 +31,7 @@ interface AuthFormProps {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGovernmentEmployee, setIsGovernmentEmployee] = useState(false);
   const { toast } = useToast();
   const auth = useAuth();
   const { user } = useUser();
@@ -114,6 +117,14 @@ export function AuthForm({ mode }: AuthFormProps) {
             </FormItem>
           )}
         />
+
+        {isLogin && (
+          <div className="flex items-center space-x-2">
+            <Switch id="government-mode" checked={isGovernmentEmployee} onCheckedChange={setIsGovernmentEmployee} />
+            <Label htmlFor="government-mode">Government Employee Mode</Label>
+          </div>
+        )}
+
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isLogin ? 'Login' : 'Create Account'}
