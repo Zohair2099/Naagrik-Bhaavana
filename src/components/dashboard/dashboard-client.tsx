@@ -13,6 +13,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { Counter } from './counter';
+import { ImageCarousel } from './image-carousel';
 
 
 const allStatuses = ['Reported', 'In Progress', 'Resolved'];
@@ -106,6 +107,7 @@ export function DashboardClient() {
   return (
     <div className="space-y-6">
       <Hero />
+      <ImageCarousel />
       
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
         <h2 className="text-3xl font-bold text-secondary font-headline">All Issues</h2>

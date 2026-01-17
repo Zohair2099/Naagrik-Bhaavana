@@ -34,6 +34,30 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.telanganatribune.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'propertyadviser.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.swarajyamag.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'newsmeter.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.telanganatoday.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.thehansindia.com',
+      },
     ],
   },
 };

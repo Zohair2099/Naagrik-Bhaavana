@@ -47,6 +47,42 @@
       "description": "Image of a damaged park bench",
       "imageUrl": "https://images.unsplash.com/photo-1697841285032-3ca25f47e6f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGFyayUyMGJlbmNofGVufDB8fHx8MTc2ODQ4OTUzM3ww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "park bench"
+    },
+    {
+      "id": "carousel-image-1",
+      "description": "News article about a new flyover inauguration.",
+      "imageUrl": "https://www.telanganatribune.com/wp-content/uploads/2024/07/revanth-reddy-pjr-flyover-inauguration.jpg",
+      "imageHint": "flyover inauguration"
+    },
+    {
+      "id": "carousel-image-2",
+      "description": "News about city road repair works.",
+      "imageUrl": "https://propertyadviser.in/news/wp-content/uploads/2019/04/pothole-filling-works-hyderabad_1_21111601_201711111308331569_1_20190416174705.jpg",
+      "imageHint": "road repair"
+    },
+    {
+      "id": "carousel-image-3",
+      "description": "Article on modernizing roads and junctions.",
+      "imageUrl": "https://static.swarajyamag.com/unsafe/1280x720/filters:format(webp)/images/2024/07/49a997e0-47b2-4d51-9e7f-6deeb01d2d0c/49a997e0-47b2-4d51-9e7f-6deeb01d2d0c.jpg",
+      "imageHint": "city roads"
+    },
+    {
+      "id": "carousel-image-4",
+      "description": "News about GHMC speeding up road repairs.",
+      "imageUrl": "https://newsmeter.in/h-upload/2024/07/22/569074-srdf.webp",
+      "imageHint": "road construction"
+    },
+    {
+      "id": "carousel-image-5",
+      "description": "Article on police crackdown on drunk drivers.",
+      "imageUrl": "https://cdn.telanganatoday.com/wp-content/uploads/2024/07/drunk-and-drive.jpg",
+      "imageHint": "police check"
+    },
+    {
+      "id": "carousel-image-6",
+      "description": "News report about police cracking down on drink driving.",
+      "imageUrl": "https://assets.thehansindia.com/h-upload/2024/07/29/1451558-hyderabad.webp",
+      "imageHint": "traffic police"
     }
   ]
 }
