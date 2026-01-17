@@ -22,6 +22,8 @@ export function SiteHeader() {
   const router = useRouter();
   const isLoggedIn = !!user;
 
+  const isGovernmentEmployee = user?.email === '160923733200@lords.aac.in';
+
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/login');
@@ -83,14 +85,18 @@ export function SiteHeader() {
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     <span>My Reports</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/settings')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/admin')}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Admin Panel</span>
-                  </DropdownMenuItem>
+                  {isGovernmentEmployee && (
+                    <>
+                      <DropdownMenuItem onClick={() => router.push('/settings')}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/admin')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />

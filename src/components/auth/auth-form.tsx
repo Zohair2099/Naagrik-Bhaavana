@@ -46,11 +46,15 @@ export function AuthForm({ mode }: AuthFormProps) {
     if (user) {
       toast({
         title: mode === 'login' ? 'Logged In!' : 'Account Created!',
-        description: "You're being redirected to the dashboard.",
+        description: "You're being redirected...",
       });
-      router.push('/');
+      if (mode === 'login' && isGovernmentEmployee && user.email === '160923733200@lords.aac.in') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
     }
-  }, [user, router, mode, toast]);
+  }, [user, router, mode, toast, isGovernmentEmployee]);
 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
