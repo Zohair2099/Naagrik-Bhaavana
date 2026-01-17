@@ -1,0 +1,1529 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nagrik Bhavana - Civic Issue Reporting System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF6B35;
+            --primary-dark: #E85A28;
+            --secondary: #004E89;
+            --secondary-dark: #003A66;
+            --accent: #F7B801;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg-primary: #FAFBFC;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #1A202C;
+            --text-secondary: #4A5568;
+            --border: #E2E8F0;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--secondary);
+            box-shadow: 0 4px 12px rgba(247, 184, 1, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.625rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--secondary);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--secondary) 0%, #006BA6 100%);
+            color: white;
+            padding: 4rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(247, 184, 1, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+        }
+
+        .hero h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-header h2 {
+            font-size: 2rem;
+            color: var(--secondary);
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.25rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .issues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .issue-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .issue-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .category-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .category-pothole { background: #FEE2E2; color: #991B1B; }
+        .category-garbage { background: #FEF3C7; color: #92400E; }
+        .category-street-light { background: #DBEAFE; color: #1E40AF; }
+        .category-water { background: #DCFCE7; color: #166534; }
+        .category-drainage { background: #E0E7FF; color: #3730A3; }
+        .category-other { background: #F3F4F6; color: #374151; }
+
+        .severity-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .severity-low { background: #D1FAE5; color: #065F46; }
+        .severity-medium { background: #FED7AA; color: #9A3412; }
+        .severity-high { background: #FEE2E2; color: #991B1B; }
+
+        .issue-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .issue-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .issue-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-reported { background: #FEF3C7; color: #92400E; }
+        .status-in-progress { background: #DBEAFE; color: #1E40AF; }
+        .status-resolved { background: #D1FAE5; color: #065F46; }
+
+        .upvote-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .upvote-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .upvote-btn.upvoted {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Form Styles */
+        .form-container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px var(--shadow);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        /* Auth Pages */
+        .auth-container {
+            min-height: calc(100vh - 200px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-box {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .auth-box h2 {
+            font-size: 2rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-box p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* Admin Table */
+        .admin-table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-primary);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover {
+            background: var(--bg-primary);
+        }
+
+        .status-select {
+            padding: 0.5rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Loading & Empty States */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero h2 {
+                font-size: 2rem;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .issues-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .issue-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Mock Data Storage
+        const mockIssues = [
+            {
+                id: 1,
+                title: "Large pothole on MG Road",
+                description: "There's a dangerous pothole near the traffic signal that's causing accidents. Immediate attention required.",
+                location: "MG Road, Near City Center",
+                category: "Pothole",
+                severity: "high",
+                status: "reported",
+                upvotes: 23,
+                reportedBy: "user1",
+                date: "2026-01-15",
+                image: null
+            },
+            {
+                id: 2,
+                title: "Garbage accumulation in residential area",
+                description: "Garbage hasn't been collected for 3 days in our locality. Creating health hazards.",
+                location: "Sector 15, Green Park",
+                category: "Garbage",
+                severity: "medium",
+                status: "in-progress",
+                upvotes: 15,
+                reportedBy: "user2",
+                date: "2026-01-14",
+                image: null
+            },
+            {
+                id: 3,
+                title: "Street lights not working",
+                description: "Multiple street lights are non-functional, making it unsafe at night.",
+                location: "Park Avenue",
+                category: "Street Light",
+                severity: "medium",
+                status: "reported",
+                upvotes: 8,
+                reportedBy: "user1",
+                date: "2026-01-13",
+                image: null
+            },
+            {
+                id: 4,
+                title: "Water pipeline leakage",
+                description: "Continuous water leakage wasting water and damaging road.",
+                location: "Station Road",
+                category: "Water",
+                severity: "high",
+                status: "resolved",
+                upvotes: 31,
+                reportedBy: "user3",
+                date: "2026-01-10",
+                image: null
+            }
+        ];
+
+        function App() {
+            const [currentPage, setCurrentPage] = useState('home');
+            const [user, setUser] = useState(null);
+            const [issues, setIssues] = useState(mockIssues);
+            const [filterCategory, setFilterCategory] = useState('all');
+            const [filterStatus, setFilterStatus] = useState('all');
+            const [selectedIssue, setSelectedIssue] = useState(null);
+            const [upvotedIssues, setUpvotedIssues] = useState([]);
+
+            // Simulate AI categorization
+            const categorizeIssue = (description, location) => {
+                const keywords = {
+                    'Pothole': ['pothole', 'hole', 'road damage', 'crack'],
+                    'Garbage': ['garbage', 'waste', 'trash', 'dump'],
+                    'Street Light': ['light', 'lamp', 'dark', 'illumination'],
+                    'Water': ['water', 'leak', 'pipe', 'drainage', 'sewer'],
+                    'Drainage': ['drain', 'flood', 'overflow', 'gutter']
+                };
+
+                const text = `${description} ${location}`.toLowerCase();
+                
+                for (const [category, words] of Object.entries(keywords)) {
+                    if (words.some(word => text.includes(word))) {
+                        return category;
+                    }
+                }
+                return 'Other';
+            };
+
+            const assessSeverity = (description) => {
+                const highKeywords = ['dangerous', 'urgent', 'emergency', 'immediate', 'accident'];
+                const mediumKeywords = ['concern', 'issue', 'problem', 'needs attention'];
+                
+                const text = description.toLowerCase();
+                
+                if (highKeywords.some(word => text.includes(word))) return 'high';
+                if (mediumKeywords.some(word => text.includes(word))) return 'medium';
+                return 'low';
+            };
+
+            const handleLogin = (email, password) => {
+                // Mock authentication
+                if (email && password) {
+                    const isAdmin = email.includes('admin');
+                    setUser({ email, isAdmin, id: 'user1' });
+                    setCurrentPage('home');
+                }
+            };
+
+            const handleSignup = (email, password) => {
+                if (email && password) {
+                    setUser({ email, isAdmin: false, id: 'user' + Date.now() });
+                    setCurrentPage('home');
+                }
+            };
+
+            const handleLogout = () => {
+                setUser(null);
+                setCurrentPage('home');
+            };
+
+            const handleReportIssue = (formData) => {
+                const category = categorizeIssue(formData.description, formData.location);
+                const severity = assessSeverity(formData.description);
+                
+                const newIssue = {
+                    id: issues.length + 1,
+                    ...formData,
+                    category,
+                    severity,
+                    status: 'reported',
+                    upvotes: 0,
+                    reportedBy: user.id,
+                    date: new Date().toISOString().split('T')[0]
+                };
+
+                setIssues([newIssue, ...issues]);
+                setCurrentPage('home');
+            };
+
+            const handleUpvote = (issueId) => {
+                if (!user) {
+                    alert('Please login to upvote');
+                    return;
+                }
+
+                if (upvotedIssues.includes(issueId)) {
+                    setUpvotedIssues(upvotedIssues.filter(id => id !== issueId));
+                    setIssues(issues.map(issue => 
+                        issue.id === issueId ? {...issue, upvotes: issue.upvotes - 1} : issue
+                    ));
+                } else {
+                    setUpvotedIssues([...upvotedIssues, issueId]);
+                    setIssues(issues.map(issue => 
+                        issue.id === issueId ? {...issue, upvotes: issue.upvotes + 1} : issue
+                    ));
+                }
+            };
+
+            const handleStatusUpdate = (issueId, newStatus) => {
+                setIssues(issues.map(issue => 
+                    issue.id === issueId ? {...issue, status: newStatus} : issue
+                ));
+            };
+
+            const getFilteredIssues = () => {
+                return issues.filter(issue => {
+                    const categoryMatch = filterCategory === 'all' || issue.category === filterCategory;
+                    const statusMatch = filterStatus === 'all' || issue.status === filterStatus;
+                    return categoryMatch && statusMatch;
+                });
+            };
+
+            const getUserIssues = () => {
+                return issues.filter(issue => issue.reportedBy === user?.id);
+            };
+
+            return (
+                <div className="app-container">
+                    <Header 
+                        user={user} 
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
+                        onLogout={handleLogout}
+                    />
+                    
+                    <main className="main-content">
+                        {currentPage === 'home' && (
+                            <HomePage 
+                                issues={getFilteredIssues()}
+                                filterCategory={filterCategory}
+                                setFilterCategory={setFilterCategory}
+                                filterStatus={filterStatus}
+                                setFilterStatus={setFilterStatus}
+                                onUpvote={handleUpvote}
+                                upvotedIssues={upvotedIssues}
+                                setSelectedIssue={setSelectedIssue}
+                                totalIssues={issues.length}
+                                resolvedIssues={issues.filter(i => i.status === 'resolved').length}
+                            />
+                        )}
+                        
+                        {currentPage === 'report' && (
+                            user ? (
+                                <ReportIssuePage onSubmit={handleReportIssue} />
+                            ) : (
+                                <div className="auth-container">
+                                    <div className="auth-box">
+                                        <h2>Login Required</h2>
+                                        <p>Please login to report an issue</p>
+                                        <button className="btn btn-primary" onClick={() => setCurrentPage('login')}>
+                                            Go to Login
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        )}
+                        
+                        {currentPage === 'my-reports' && (
+                            user ? (
+                                <MyReportsPage 
+                                    issues={getUserIssues()}
+                                    setSelectedIssue={setSelectedIssue}
+                                />
+                            ) : (
+                                <div className="auth-container">
+                                    <div className="auth-box">
+                                        <h2>Login Required</h2>
+                                        <p>Please login to view your reports</p>
+                                        <button className="btn btn-primary" onClick={() => setCurrentPage('login')}>
+                                            Go to Login
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        )}
+                        
+                        {currentPage === 'admin' && (
+                            user?.isAdmin ? (
+                                <AdminPage 
+                                    issues={issues}
+                                    onStatusUpdate={handleStatusUpdate}
+                                />
+                            ) : (
+                                <div className="auth-container">
+                                    <div className="auth-box">
+                                        <h2>Access Denied</h2>
+                                        <p>Admin access required</p>
+                                        <button className="btn btn-primary" onClick={() => setCurrentPage('home')}>
+                                            Go to Home
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        )}
+                        
+                        {currentPage === 'login' && (
+                            <LoginPage onLogin={handleLogin} setCurrentPage={setCurrentPage} />
+                        )}
+                        
+                        {currentPage === 'signup' && (
+                            <SignupPage onSignup={handleSignup} setCurrentPage={setCurrentPage} />
+                        )}
+                    </main>
+
+                    {selectedIssue && (
+                        <IssueModal 
+                            issue={selectedIssue} 
+                            onClose={() => setSelectedIssue(null)}
+                            onUpvote={handleUpvote}
+                            upvoted={upvotedIssues.includes(selectedIssue.id)}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        function Header({ user, currentPage, setCurrentPage, onLogout }) {
+            return (
+                <header className="header">
+                    <div className="header-content">
+                        <div className="logo-section">
+                            <div className="logo">🏛️</div>
+                            <div className="logo-text">
+                                <h1>Nagrik Bhavana</h1>
+                                <p>Civic Issue Reporting</p>
+                            </div>
+                        </div>
+
+                        <nav className="nav-links">
+                            <span 
+                                className={`nav-link ${currentPage === 'home' ? 'active' : ''}`}
+                                onClick={() => setCurrentPage('home')}
+                            >
+                                Dashboard
+                            </span>
+                            <span 
+                                className={`nav-link ${currentPage === 'report' ? 'active' : ''}`}
+                                onClick={() => setCurrentPage('report')}
+                            >
+                                Report Issue
+                            </span>
+                            {user && (
+                                <span 
+                                    className={`nav-link ${currentPage === 'my-reports' ? 'active' : ''}`}
+                                    onClick={() => setCurrentPage('my-reports')}
+                                >
+                                    My Reports
+                                </span>
+                            )}
+                            {user?.isAdmin && (
+                                <span 
+                                    className={`nav-link ${currentPage === 'admin' ? 'active' : ''}`}
+                                    onClick={() => setCurrentPage('admin')}
+                                >
+                                    Admin Panel
+                                </span>
+                            )}
+                        </nav>
+
+                        <div className="user-section">
+                            {user ? (
+                                <>
+                                    <span style={{color: 'white', fontSize: '0.875rem'}}>
+                                        {user.email}
+                                    </span>
+                                    <button className="btn btn-secondary" onClick={onLogout}>
+                                        Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button 
+                                        className="btn btn-secondary"
+                                        onClick={() => setCurrentPage('login')}
+                                    >
+                                        Login
+                                    </button>
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => setCurrentPage('signup')}
+                                    >
+                                        Sign Up
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </header>
+            );
+        }
+
+        function HomePage({ issues, filterCategory, setFilterCategory, filterStatus, setFilterStatus, onUpvote, upvotedIssues, setSelectedIssue, totalIssues, resolvedIssues }) {
+            const categories = ['all', 'Pothole', 'Garbage', 'Street Light', 'Water', 'Drainage', 'Other'];
+            const statuses = ['all', 'reported', 'in-progress', 'resolved'];
+
+            return (
+                <>
+                    <div className="hero">
+                        <div className="hero-content">
+                            <h2>Building Better Communities Together</h2>
+                            <p>Report civic issues, track progress, and make your voice heard</p>
+                            <div className="hero-stats">
+                                <div className="stat-item">
+                                    <div className="stat-number">{totalIssues}</div>
+                                    <div className="stat-label">Total Reports</div>
+                                </div>
+                                <div className="stat-item">
+                                    <div className="stat-number">{resolvedIssues}</div>
+                                    <div className="stat-label">Resolved Issues</div>
+                                </div>
+                                <div className="stat-item">
+                                    <div className="stat-number">{totalIssues > 0 ? Math.round((resolvedIssues / totalIssues) * 100) : 0}%</div>
+                                    <div className="stat-label">Success Rate</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-header">
+                        <h2>All Issues</h2>
+                        <div className="filters">
+                            <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        className={`filter-btn ${filterCategory === cat ? 'active' : ''}`}
+                                        onClick={() => setFilterCategory(cat)}
+                                    >
+                                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                            <div style={{display: 'flex', gap: '0.5rem'}}>
+                                {statuses.map(status => (
+                                    <button
+                                        key={status}
+                                        className={`filter-btn ${filterStatus === status ? 'active' : ''}`}
+                                        onClick={() => setFilterStatus(status)}
+                                    >
+                                        {status === 'all' ? 'All Status' : status.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {issues.length > 0 ? (
+                        <div className="issues-grid">
+                            {issues.map(issue => (
+                                <IssueCard 
+                                    key={issue.id}
+                                    issue={issue}
+                                    onUpvote={onUpvote}
+                                    upvoted={upvotedIssues.includes(issue.id)}
+                                    onClick={() => setSelectedIssue(issue)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="empty-state">
+                            <div className="empty-state-icon">📋</div>
+                            <h3>No issues found</h3>
+                            <p>Try adjusting your filters</p>
+                        </div>
+                    )}
+                </>
+            );
+        }
+
+        function IssueCard({ issue, onUpvote, upvoted, onClick }) {
+            return (
+                <div className="issue-card" onClick={onClick}>
+                    <div className="issue-header">
+                        <span className={`category-badge category-${issue.category.toLowerCase().replace(' ', '-')}`}>
+                            {issue.category}
+                        </span>
+                        <span className={`severity-badge severity-${issue.severity}`}>
+                            {issue.severity.toUpperCase()}
+                        </span>
+                    </div>
+
+                    <h3 className="issue-title">{issue.title}</h3>
+                    <p className="issue-description">{issue.description}</p>
+
+                    <div className="issue-meta">
+                        <span className="meta-item">
+                            📍 {issue.location}
+                        </span>
+                        <span className="meta-item">
+                            📅 {new Date(issue.date).toLocaleDateString()}
+                        </span>
+                    </div>
+
+                    <div className="issue-footer">
+                        <span className={`status-badge status-${issue.status}`}>
+                            {issue.status.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}
+                        </span>
+                        <button 
+                            className={`upvote-btn ${upvoted ? 'upvoted' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onUpvote(issue.id);
+                            }}
+                        >
+                            👍 {issue.upvotes}
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function ReportIssuePage({ onSubmit }) {
+            const [formData, setFormData] = useState({
+                title: '',
+                description: '',
+                location: '',
+                image: null
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (formData.title && formData.description && formData.location) {
+                    onSubmit(formData);
+                    alert('Issue reported successfully! AI has categorized your issue.');
+                }
+            };
+
+            return (
+                <div className="form-container">
+                    <h2 style={{marginBottom: '1rem', color: 'var(--secondary)'}}>Report a New Issue</h2>
+                    <p style={{color: 'var(--text-secondary)', marginBottom: '2rem'}}>
+                        Help improve your community by reporting civic issues. AI will automatically categorize and assess the severity.
+                    </p>
+
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label>Issue Title *</label>
+                            <input 
+                                type="text"
+                                placeholder="Brief title of the issue"
+                                value={formData.title}
+                                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Description *</label>
+                            <textarea
+                                placeholder="Provide detailed description of the issue..."
+                                value={formData.description}
+                                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Location *</label>
+                            <input 
+                                type="text"
+                                placeholder="Specific location or address"
+                                value={formData.location}
+                                onChange={(e) => setFormData({...formData, location: e.target.value})}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Photo (Optional)</label>
+                            <div className="file-upload">
+                                <input 
+                                    type="file"
+                                    accept="image/*"
+                                    id="photo-upload"
+                                    onChange={(e) => setFormData({...formData, image: e.target.files[0]})}
+                                />
+                                <label htmlFor="photo-upload" style={{cursor: 'pointer'}}>
+                                    📷 Click to upload photo
+                                    {formData.image && <div style={{marginTop: '0.5rem', color: 'var(--success)'}}>
+                                        ✓ {formData.image.name}
+                                    </div>}
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" className="btn btn-primary" style={{width: '100%'}}>
+                            Submit Report
+                        </button>
+                    </form>
+                </div>
+            );
+        }
+
+        function MyReportsPage({ issues, setSelectedIssue }) {
+            return (
+                <>
+                    <div className="dashboard-header">
+                        <h2>My Reports</h2>
+                    </div>
+
+                    {issues.length > 0 ? (
+                        <div className="issues-grid">
+                            {issues.map(issue => (
+                                <IssueCard 
+                                    key={issue.id}
+                                    issue={issue}
+                                    onUpvote={() => {}}
+                                    upvoted={false}
+                                    onClick={() => setSelectedIssue(issue)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="empty-state">
+                            <div className="empty-state-icon">📝</div>
+                            <h3>No reports yet</h3>
+                            <p>Start reporting issues to track them here</p>
+                        </div>
+                    )}
+                </>
+            );
+        }
+
+        function AdminPage({ issues, onStatusUpdate }) {
+            return (
+                <>
+                    <div className="dashboard-header">
+                        <h2>Admin Dashboard</h2>
+                        <div style={{color: 'var(--text-secondary)'}}>
+                            Total Issues: {issues.length}
+                        </div>
+                    </div>
+
+                    <div className="admin-table">
+                        <div className="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Location</th>
+                                        <th>Severity</th>
+                                        <th>Upvotes</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {issues.map(issue => (
+                                        <tr key={issue.id}>
+                                            <td>{issue.id}</td>
+                                            <td>{issue.title}</td>
+                                            <td>
+                                                <span className={`category-badge category-${issue.category.toLowerCase().replace(' ', '-')}`}>
+                                                    {issue.category}
+                                                </span>
+                                            </td>
+                                            <td>{issue.location}</td>
+                                            <td>
+                                                <span className={`severity-badge severity-${issue.severity}`}>
+                                                    {issue.severity}
+                                                </span>
+                                            </td>
+                                            <td>{issue.upvotes}</td>
+                                            <td>{new Date(issue.date).toLocaleDateString()}</td>
+                                            <td>
+                                                <select 
+                                                    className="status-select"
+                                                    value={issue.status}
+                                                    onChange={(e) => onStatusUpdate(issue.id, e.target.value)}
+                                                >
+                                                    <option value="reported">Reported</option>
+                                                    <option value="in-progress">In Progress</option>
+                                                    <option value="resolved">Resolved</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        function LoginPage({ onLogin, setCurrentPage }) {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onLogin(email, password);
+            };
+
+            return (
+                <div className="auth-container">
+                    <div className="auth-box">
+                        <h2>Welcome Back</h2>
+                        <p>Login to report and track civic issues</p>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input 
+                                    type="email"
+                                    placeholder="your@email.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Password</label>
+                                <input 
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" style={{width: '100%', marginBottom: '1rem'}}>
+                                Login
+                            </button>
+                        </form>
+
+                        <p style={{textAlign: 'center', fontSize: '0.875rem'}}>
+                            Don't have an account?{' '}
+                            <span 
+                                style={{color: 'var(--primary)', cursor: 'pointer', fontWeight: 600}}
+                                onClick={() => setCurrentPage('signup')}
+                            >
+                                Sign up
+                            </span>
+                        </p>
+
+                        <p style={{marginTop: '1rem', padding: '1rem', background: 'var(--bg-primary)', borderRadius: '8px', fontSize: '0.875rem'}}>
+                            <strong>Demo:</strong><br/>
+                            User: user@demo.com<br/>
+                            Admin: admin@demo.com<br/>
+                            Password: any
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        function SignupPage({ onSignup, setCurrentPage }) {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [confirmPassword, setConfirmPassword] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                }
+                onSignup(email, password);
+            };
+
+            return (
+                <div className="auth-container">
+                    <div className="auth-box">
+                        <h2>Create Account</h2>
+                        <p>Join the community and report civic issues</p>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input 
+                                    type="email"
+                                    placeholder="your@email.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Password</label>
+                                <input 
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Confirm Password</label>
+                                <input 
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" style={{width: '100%', marginBottom: '1rem'}}>
+                                Sign Up
+                            </button>
+                        </form>
+
+                        <p style={{textAlign: 'center', fontSize: '0.875rem'}}>
+                            Already have an account?{' '}
+                            <span 
+                                style={{color: 'var(--primary)', cursor: 'pointer', fontWeight: 600}}
+                                onClick={() => setCurrentPage('login')}
+                            >
+                                Login
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        function IssueModal({ issue, onClose, onUpvote, upvoted }) {
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close" onClick={onClose}>×</button>
+                        
+                        <div style={{display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap'}}>
+                            <span className={`category-badge category-${issue.category.toLowerCase().replace(' ', '-')}`}>
+                                {issue.category}
+                            </span>
+                            <span className={`severity-badge severity-${issue.severity}`}>
+                                {issue.severity.toUpperCase()}
+                            </span>
+                            <span className={`status-badge status-${issue.status}`}>
+                                {issue.status.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')}
+                            </span>
+                        </div>
+
+                        <h2 style={{marginBottom: '1rem', color: 'var(--secondary)'}}>{issue.title}</h2>
+                        
+                        <div style={{marginBottom: '1.5rem'}}>
+                            <div className="meta-item" style={{marginBottom: '0.5rem'}}>
+                                📍 {issue.location}
+                            </div>
+                            <div className="meta-item">
+                                📅 {new Date(issue.date).toLocaleDateString()}
+                            </div>
+                        </div>
+
+                        <p style={{color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.7'}}>
+                            {issue.description}
+                        </p>
+
+                        <button 
+                            className={`upvote-btn ${upvoted ? 'upvoted' : ''}`}
+                            onClick={() => onUpvote(issue.id)}
+                            style={{width: '100%', justifyContent: 'center'}}
+                        >
+                            👍 {issue.upvotes} Upvotes
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
+
+    
