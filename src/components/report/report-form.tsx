@@ -95,9 +95,29 @@ export function ReportForm() {
     setSubmissionStep('');
 
     try {
+        let imageUrl = '';
+        let imageHint = '';
+
         if(isDemoMode) {
             setSubmissionStep('Submitting demo report...');
-            const demoImage = PlaceHolderImages.find(img => img.id === 'demo-pothole');
+
+            if (values.media) {
+                try {
+                    // Create a local data URI from the file. This is fast and doesn't use the network.
+                    imageUrl = await fileToDataUri(values.media);
+                    imageHint = 'user provided'; // We didn't run AI, so use a generic hint.
+                } catch (e) {
+                    console.warn('Could not read demo file, falling back to placeholder.', e);
+                    const demoImage = PlaceHolderImages.find(img => img.id === 'demo-pothole');
+                    imageUrl = demoImage?.imageUrl || '';
+                    imageHint = demoImage?.imageHint || 'pothole road';
+                }
+            } else {
+                // If no file was selected in demo mode, use the default placeholder.
+                const demoImage = PlaceHolderImages.find(img => img.id === 'demo-pothole');
+                imageUrl = demoImage?.imageUrl || '';
+                imageHint = demoImage?.imageHint || 'pothole road';
+            }
             
             const newIssue = {
                 userId: user.uid,
@@ -112,23 +132,25 @@ export function ReportForm() {
                 updatedAt: new Date().toISOString(),
                 reporterName: user.displayName || user.email || 'Anonymous',
                 reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
-                imageUrl: demoImage?.imageUrl || '',
-                imageHint: demoImage?.imageHint || 'pothole road'
+                imageUrl: imageUrl,
+                imageHint: imageHint
             };
-            // Data is prepared but not saved to Firestore.
+            // In demo mode, we prepare the data but do not save it to Firestore.
 
         } else {
+            // This is the real submission flow
+            
             // Step 1: Upload Media
             setSubmissionStep('Uploading media...');
             const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
             const storageRef = ref(storage, storagePath);
             try {
                 await uploadBytes(storageRef, values.media);
+                imageUrl = await getDownloadURL(storageRef);
             } catch (uploadError) {
                 console.error("Upload failed:", uploadError);
-                throw new Error("Upload Failed. Please check your network or file permissions.");
+                throw new Error("Upload Failed. Please check your network, file permissions, or storage rules.");
             }
-            const imageUrl = await getDownloadURL(storageRef);
 
             // Step 2: AI Analysis (with fallback)
             let categorization: CategorizeIssueReportOutput;
@@ -136,21 +158,22 @@ export function ReportForm() {
                 setSubmissionStep('Analyzing issue...');
                 const photoDataUri = await fileToDataUri(values.media);
                 categorization = await categorizeIssueReport({
-                description: values.description || values.title,
-                location: values.location,
-                category: values.category,
-                photoDataUri,
+                    description: values.description || values.title,
+                    location: values.location,
+                    category: values.category,
+                    photoDataUri,
                 });
+                imageHint = categorization.imageHint || 'AI analyzed';
             } catch (aiError) {
                 console.warn("AI categorization failed, using fallback.", aiError);
                 categorization = { severity: 'low', imageHint: 'user provided' };
                 toast({
-                title: "AI Analysis Skipped",
-                description: "A default severity was assigned.",
+                    title: "AI Analysis Skipped",
+                    description: "A default severity was assigned.",
                 });
             }
 
-            // Step 3: Prepare data for Firestore (but don't save)
+            // Step 3: Prepare and Save to Firestore
             setSubmissionStep('Finalizing report...');
             const newIssue = {
                 userId: user.uid,
@@ -166,9 +189,15 @@ export function ReportForm() {
                 reporterName: user.displayName || user.email || 'Anonymous',
                 reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
                 imageUrl,
-                imageHint: categorization.imageHint
+                imageHint
             };
-            // Data is prepared but not saved to Firestore.
+            
+            try {
+                await addDoc(collection(firestore, 'issues'), newIssue);
+            } catch (dbError) {
+                console.error("Save to Firestore failed:", dbError);
+                throw new Error("Save Failed. Could not save the report to the database. Check Firestore rules.");
+            }
         }
     
       // Step 4: Success
@@ -328,10 +357,9 @@ export function ReportForm() {
                 <FormControl>
                     <label htmlFor="media-upload" className={cn(
                         "group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-input bg-background p-6 text-center transition-colors hover:border-primary hover:bg-primary/5",
-                        mediaFile && "border-solid border-primary bg-primary/5",
-                        isDemoMode && "bg-muted/50 cursor-not-allowed opacity-60"
+                        mediaFile && "border-solid border-primary bg-primary/5"
                     )}>
-                        {mediaFile && !isDemoMode ? (
+                        {mediaFile ? (
                             <>
                                 <FileCheck2 className="h-10 w-10 text-primary" />
                                 <p className="mt-2 text-sm font-medium text-primary">{mediaFile.name}</p>
@@ -339,12 +367,11 @@ export function ReportForm() {
                             </>
                         ) : (
                             <>
-                                <UploadCloud className={cn("h-10 w-10 text-muted-foreground", !isDemoMode && "group-hover:text-primary")} />
+                                <UploadCloud className="h-10 w-10 text-muted-foreground group-hover:text-primary" />
                                 <p className="mt-2 text-sm text-muted-foreground">
-                                    <span className={cn("font-semibold", !isDemoMode && "text-primary")}>Click to upload</span> or drag and drop
+                                    <span className="font-semibold text-primary">Click to upload</span> or drag and drop
                                 </p>
                                 <p className="text-xs text-muted-foreground">PNG, JPG, MP4, or MOV (max {MAX_FILE_SIZE_MB}MB)</p>
-                                {isDemoMode && <p className="mt-2 text-xs font-semibold text-destructive">Disabled in Demo Mode</p>}
                             </>
                         )}
                         <Input 
@@ -353,7 +380,6 @@ export function ReportForm() {
                           className="sr-only"
                           accept="image/jpeg,image/png,video/mp4,video/quicktime"
                           onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
-                          disabled={isDemoMode}
                           {...rest}
                         />
                     </label>
@@ -369,7 +395,7 @@ export function ReportForm() {
               <Label htmlFor="demo-mode" className="cursor-pointer">Enable Demo Mode</Label>
             </div>
             <FormDescription>
-                Bypass media upload and AI analysis for a quick, successful submission.
+                Bypass Firebase Storage upload and AI analysis for a quick, successful submission. You can still attach a photo.
             </FormDescription>
         </div>
 
