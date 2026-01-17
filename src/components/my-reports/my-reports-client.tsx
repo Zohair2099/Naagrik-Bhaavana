@@ -1,11 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
-import { collection, query, where, doc, increment } from 'firebase/firestore';
-import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useMemo, useState } from 'react';
+import { useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { Issue } from '@/lib/types';
+import { mockIssues as allMockIssues } from '@/lib/mock-data';
 import { IssueCard } from '@/components/dashboard/issue-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -23,19 +22,21 @@ function MyReportsSkeletons() {
 }
 
 export function MyReportsClient() {
-  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
-  const issuesQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return query(collection(firestore, 'issues'), where('userId', '==', user.uid));
-  }, [firestore, user?.uid]);
+  const [allIssues, setAllIssues] = useState<Issue[]>(allMockIssues);
 
-  const { data: issues, isLoading, error } = useCollection<Issue>(issuesQuery);
+  const issues = useMemo(() => {
+    // For demo purposes, we'll assign the current logged-in user to 'user-1' from our mock data.
+    if (!user) return [];
+    return allIssues.filter(issue => issue.userId === 'user-1');
+  }, [user, allIssues]);
+
+  const isLoading = false;
+  const error = null;
 
   const handleUpvote = (issueId: string) => {
-    if (!firestore) return;
     if (!user) {
       toast({
         variant: 'destructive',
@@ -44,10 +45,11 @@ export function MyReportsClient() {
       });
       return;
     }
-    const issueRef = doc(firestore, 'issues', issueId);
-    updateDocumentNonBlocking(issueRef, {
-      upvotes: increment(1),
-    });
+    setAllIssues(currentIssues => 
+      currentIssues.map(issue => 
+        issue.id === issueId ? { ...issue, upvotes: issue.upvotes + 1 } : issue
+      )
+    );
   };
 
   // State 1: Still checking for user

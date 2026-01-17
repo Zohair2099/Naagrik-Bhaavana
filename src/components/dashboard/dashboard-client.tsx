@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { collection, doc, increment } from 'firebase/firestore';
-import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { Issue } from '@/lib/types';
+import { mockIssues as initialMockIssues } from '@/lib/mock-data';
 import { IssueCard } from './issue-card';
 import { Skeleton } from '../ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
@@ -56,16 +55,12 @@ function Hero() {
 
 
 export function DashboardClient() {
-  const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
 
-  const issuesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'issues');
-  }, [firestore]);
-
-  const { data: issues, isLoading, error } = useCollection<Issue>(issuesQuery);
+  const [issues, setIssues] = useState<Issue[]>(initialMockIssues);
+  const isLoading = false;
+  const error = null;
 
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -89,7 +84,6 @@ export function DashboardClient() {
   }, [issues]);
 
   const handleUpvote = (issueId: string) => {
-    if (!firestore) return;
     if (!user) {
       toast({
         variant: 'destructive',
@@ -98,10 +92,11 @@ export function DashboardClient() {
       });
       return;
     }
-    const issueRef = doc(firestore, 'issues', issueId);
-    updateDocumentNonBlocking(issueRef, {
-      upvotes: increment(1),
-    });
+    setIssues(currentIssues => 
+      currentIssues.map(issue => 
+        issue.id === issueId ? { ...issue, upvotes: issue.upvotes + 1 } : issue
+      )
+    );
   };
 
   return (

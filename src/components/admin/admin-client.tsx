@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { collection, doc } from 'firebase/firestore';
-import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useUser } from '@/firebase';
 import type { Issue } from '@/lib/types';
+import { mockIssues as initialMockIssues } from '@/lib/mock-data';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import {
@@ -28,24 +27,18 @@ import { Button } from '../ui/button';
 import Link from 'next/link';
 
 export function AdminClient() {
-  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-
-  const issuesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    // In a real app, you might add ordering or filtering here
-    return collection(firestore, 'issues');
-  }, [firestore]);
-
-  const { data: issues, isLoading, error } = useCollection<Issue>(issuesQuery);
+  const [issues, setIssues] = useState<Issue[]>(initialMockIssues);
+  const isLoading = false;
+  const error = null;
 
   const handleStatusUpdate = (issueId: string, newStatus: string) => {
-    if (!firestore || !user) return;
-    const issueRef = doc(firestore, 'issues', issueId);
-    updateDocumentNonBlocking(issueRef, {
-      status: newStatus,
-      updatedAt: new Date().toISOString(),
-    });
+    if (!user) return;
+    setIssues(currentIssues => 
+      currentIssues.map(issue => 
+        issue.id === issueId ? { ...issue, status: newStatus as Issue['status'], updatedAt: new Date().toISOString() } : issue
+      )
+    );
   };
 
   const getSeverityVariant = (severity: Issue['severity']) => {

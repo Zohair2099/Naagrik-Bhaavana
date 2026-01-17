@@ -53,6 +53,36 @@
       "description": "Police checking for drunk drivers.",
       "imageUrl": "https://media.telanganatoday.com/wp-content/uploads/2025/04/Hyderabad-Traffic-police-caught-1062-drunk-drivers-during-weeklong-check.jpg",
       "imageHint": "police check"
+    },
+    {
+      "id": "issue-water-leak",
+      "description": "Image of a water leak",
+      "imageUrl": "https://images.unsplash.com/photo-1648731981193-161b6c728d64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8d2F0ZXIlMjBsZWFrfGVufDB8fHx8MTc2ODYzNTQzNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "water leak"
+    },
+    {
+      "id": "issue-traffic-light",
+      "description": "Image of a traffic light",
+      "imageUrl": "https://images.unsplash.com/photo-1584649525122-8d6895492a5d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx0cmFmZmljJTIwbGlnaHR8ZW58MHx8fHwxNzY4NTUyODI2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "traffic light"
+    },
+    {
+      "id": "issue-illegal-dumping",
+      "description": "Image of illegal dumping",
+      "imageUrl": "https://images.unsplash.com/photo-1762542530803-18c4223557dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxpbGxlZ2FsJTIwZHVtcGluZ3xlbnwwfHx8fDE3Njg2MzU0MzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "illegal dumping"
+    },
+    {
+      "id": "issue-bike-path",
+      "description": "Image of a cracked bike path",
+      "imageUrl": "https://images.unsplash.com/photo-1656166714101-42ea748e3778?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxiaWtlJTIwcGF0aHxlbnwwfHx8fDE3Njg2MzU0MzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bike path"
+    },
+    {
+      "id": "issue-fallen-tree",
+      "description": "Image of a fallen tree",
+      "imageUrl": "https://images.unsplash.com/photo-1620239864516-c7513ed7eab2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYWxsZW4lMjB0cmVlfGVufDB8fHx8MTc2ODU4NDkxNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fallen tree"
     }
   ]
 }
