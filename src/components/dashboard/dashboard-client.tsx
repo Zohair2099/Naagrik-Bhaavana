@@ -12,16 +12,13 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
+import { Counter } from './counter';
 
 
 const allStatuses = ['Reported', 'In Progress', 'Resolved'];
 
 
 function Hero() {
-  const totalReportsDisplay = "20 Lakh+";
-  const resolvedIssuesDisplay = "18 Lakh+";
-  const successRateDisplay = "90%";
-
   return (
     <div className="relative mb-8 overflow-hidden rounded-2xl bg-secondary p-8 text-secondary-foreground shadow-lg">
        <div className="relative z-10 max-w-3xl">
@@ -33,15 +30,21 @@ function Hero() {
           </p>
           <div className="flex flex-col sm:flex-row gap-8">
             <div className="text-center">
-              <div className="font-code text-5xl font-bold text-accent">{totalReportsDisplay}</div>
+              <div className="font-code text-5xl font-bold text-accent">
+                <Counter from={0} to={2000000} />+
+              </div>
               <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Total Reports</div>
             </div>
             <div className="text-center">
-              <div className="font-code text-5xl font-bold text-accent">{resolvedIssuesDisplay}</div>
+              <div className="font-code text-5xl font-bold text-accent">
+                <Counter from={0} to={1800000} />+
+              </div>
               <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Resolved Issues</div>
             </div>
              <div className="text-center">
-              <div className="font-code text-5xl font-bold text-accent">{successRateDisplay}</div>
+              <div className="font-code text-5xl font-bold text-accent">
+                <Counter from={0} to={90} />%
+                </div>
               <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Success Rate</div>
             </div>
           </div>
