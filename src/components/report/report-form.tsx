@@ -84,84 +84,77 @@ export function ReportForm() {
 
     setIsLoading(true);
 
-    let imageUrl = '';
-
-    // Step 1: Upload Media
     try {
+      // Step 1: Upload Media to Firebase Storage
+      let imageUrl = '';
+      try {
         const storage = getStorage(firebaseApp);
         const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
         const storageRef = ref(storage, storagePath);
         await uploadBytes(storageRef, values.media);
         imageUrl = await getDownloadURL(storageRef);
-    } catch (error) {
-        console.error('Media upload failed:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Upload Failed',
-            description: 'Could not upload your media file. Please check your network connection and try again.',
-        });
-        setIsLoading(false);
-        return; // Stop the process if upload fails
-    }
+      } catch (uploadError) {
+        console.error('Media upload failed:', uploadError);
+        throw new Error('Could not upload your media file. Please check your connection and try again.');
+      }
 
-    // Step 2: AI Categorization (with fallback)
-    let categorization: CategorizeIssueReportOutput;
-    try {
+      // Step 2: AI Categorization (with fallback for robustness)
+      let categorization: CategorizeIssueReportOutput;
+      try {
         const photoDataUri = await fileToDataUri(values.media);
         categorization = await categorizeIssueReport({
-            description: values.description || values.title,
-            location: values.location,
-            category: values.category,
-            photoDataUri,
+          description: values.description || values.title,
+          location: values.location,
+          category: values.category,
+          photoDataUri,
         });
-    } catch (aiError) {
-        console.error("AI categorization failed, using fallback.", aiError);
+      } catch (aiError) {
+        console.warn("AI categorization failed, using fallback.", aiError);
         categorization = { severity: 'low', imageHint: 'user provided' };
         toast({
-            title: "AI Analysis Skipped",
-            description: "Default severity assigned. Your report will be reviewed by an admin.",
+          title: "AI Analysis Skipped",
+          description: "Default severity assigned. Your report will be reviewed by an admin.",
         });
-    }
+      }
 
-    // Step 3: Save to Firestore
-    try {
-        const issuesCollectionRef = collection(firestore, 'issues');
-        const newIssue = {
-            userId: user.uid,
-            title: values.title,
-            description: values.description || 'No description provided.',
-            location: values.location,
-            category: values.category,
-            severity: categorization.severity,
-            status: 'Reported' as const,
-            upvotes: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            reporterName: user.displayName || user.email || 'Anonymous',
-            reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
-            imageUrl,
-            imageHint: categorization.imageHint
-        };
-        await addDoc(issuesCollectionRef, newIssue);
+      // Step 3: Save the complete report to Firestore
+      const issuesCollectionRef = collection(firestore, 'issues');
+      const newIssue = {
+        userId: user.uid,
+        title: values.title,
+        description: values.description || 'No description provided.',
+        location: values.location,
+        category: values.category,
+        severity: categorization.severity,
+        status: 'Reported' as const,
+        upvotes: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        reporterName: user.displayName || user.email || 'Anonymous',
+        reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
+        imageUrl,
+        imageHint: categorization.imageHint
+      };
+      await addDoc(issuesCollectionRef, newIssue);
 
-        // Step 4: Success
-        toast({
-            title: 'Issue Reported Successfully!',
-            description: "Thank you for your submission. You're being redirected.",
-        });
+      // Step 4: Success feedback and redirect
+      toast({
+        title: 'Issue Reported Successfully!',
+        description: "Thank you for your submission. You're being redirected.",
+      });
 
-        form.reset();
-        router.push('/my-reports'); // Redirect to My Reports page
+      form.reset();
+      router.push('/my-reports');
 
-    } catch (error) {
-        console.error('Firestore save failed:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Save Failed',
-            description: 'Your report could not be saved to the database. Please try again.',
-        });
+    } catch (error: any) {
+      console.error('Submission failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Submission Failed',
+        description: error.message || 'Could not save the report. Please try again.',
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
