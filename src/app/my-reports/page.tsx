@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function MyReportsPage() {
   return (
-    <div className="container mx-auto max-w-4xl py-8">
+    <div className="container mx-auto max-w-5xl py-8">
        <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl font-headline">My Reported Issues</CardTitle>

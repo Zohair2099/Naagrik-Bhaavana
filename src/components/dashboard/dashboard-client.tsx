@@ -14,14 +14,13 @@ import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 
 
-const allCategories = ['Pothole', 'Garbage', 'Street Light', 'Water', 'Drainage', 'Other'];
 const allStatuses = ['Reported', 'In Progress', 'Resolved'];
 
 
 function Hero({ totalIssues, resolvedIssues }: { totalIssues: number, resolvedIssues: number }) {
   const successRate = totalIssues > 0 ? Math.round((resolvedIssues / totalIssues) * 100) : 0;
   return (
-    <div className="relative overflow-hidden rounded-xl bg-secondary p-8 text-secondary-foreground mb-8 shadow-lg">
+    <div className="relative mb-8 overflow-hidden rounded-2xl bg-secondary p-8 text-secondary-foreground shadow-lg">
        <div className="relative z-10 max-w-3xl">
           <h2 className="text-4xl font-bold font-headline mb-2">
             Building Better Communities Together
@@ -31,16 +30,16 @@ function Hero({ totalIssues, resolvedIssues }: { totalIssues: number, resolvedIs
           </p>
           <div className="flex flex-col sm:flex-row gap-8">
             <div className="text-center">
-              <div className="font-code text-4xl font-bold text-accent">{totalIssues}</div>
-              <div className="text-sm text-secondary-foreground/80 mt-1">Total Reports</div>
+              <div className="font-code text-5xl font-bold text-accent">{totalIssues}</div>
+              <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Total Reports</div>
             </div>
             <div className="text-center">
-              <div className="font-code text-4xl font-bold text-accent">{resolvedIssues}</div>
-              <div className="text-sm text-secondary-foreground/80 mt-1">Resolved Issues</div>
+              <div className="font-code text-5xl font-bold text-accent">{resolvedIssues}</div>
+              <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Resolved Issues</div>
             </div>
              <div className="text-center">
-              <div className="font-code text-4xl font-bold text-accent">{successRate}%</div>
-              <div className="text-sm text-secondary-foreground/80 mt-1">Success Rate</div>
+              <div className="font-code text-5xl font-bold text-accent">{successRate}%</div>
+              <div className="text-sm uppercase tracking-wider text-secondary-foreground/80 mt-1">Success Rate</div>
             </div>
           </div>
        </div>
@@ -77,7 +76,9 @@ export function DashboardClient() {
   
   const uniqueCategories = useMemo(() => {
     if (!issues) return [];
-    return ['all', ...Array.from(new Set(issues.map((i) => i.category)))];
+    // Sort categories alphabetically for a stable UI, preventing reordering glitches
+    const categories = [...new Set(issues.map((i) => i.category))].sort();
+    return ['all', ...categories];
   }, [issues]);
 
   const handleUpvote = (issueId: string) => {
@@ -105,14 +106,14 @@ export function DashboardClient() {
       <Hero totalIssues={totalIssues} resolvedIssues={resolvedIssues} />
       
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
-        <h2 className="text-2xl font-bold text-secondary">All Issues</h2>
-        <div className="flex flex-wrap gap-2">
-           <div className="flex flex-wrap gap-2 border border-border p-1 rounded-lg bg-card">
+        <h2 className="text-3xl font-bold text-secondary font-headline">All Issues</h2>
+        <div className="flex flex-wrap items-center gap-2">
+           <div className="flex flex-wrap gap-2 border border-border p-1 rounded-full bg-card shadow-sm">
               {uniqueCategories.map((cat) => (
                 <Button
                   key={cat}
                   variant={filterCategory === cat ? 'default' : 'ghost'}
-                  className={cn("capitalize", filterCategory === cat ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
+                  className={cn("capitalize rounded-full", filterCategory === cat ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-muted')}
                   onClick={() => setFilterCategory(cat)}
                   size="sm"
                 >
@@ -120,12 +121,12 @@ export function DashboardClient() {
                 </Button>
               ))}
             </div>
-            <div className="flex flex-wrap gap-2 border border-border p-1 rounded-lg bg-card">
+            <div className="flex flex-wrap gap-2 border border-border p-1 rounded-full bg-card shadow-sm">
               {['all', ...allStatuses].map((status) => (
                 <Button
                   key={status}
                   variant={filterStatus === status ? 'default' : 'ghost'}
-                  className={cn("capitalize", filterStatus === status ? 'bg-primary text-primary-foreground' : 'hover:bg-muted')}
+                  className={cn("capitalize rounded-full", filterStatus === status ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-muted')}
                   onClick={() => setFilterStatus(status)}
                   size="sm"
                 >
@@ -139,9 +140,9 @@ export function DashboardClient() {
 
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-[250px] w-full rounded-lg" />
-          <Skeleton className="h-[250px] w-full rounded-lg" />
-          <Skeleton className="h-[250px] w-full rounded-lg" />
+          <Skeleton className="h-[280px] w-full rounded-2xl" />
+          <Skeleton className="h-[280px] w-full rounded-2xl" />
+          <Skeleton className="h-[280px] w-full rounded-2xl" />
         </div>
       )}
       {error && (
@@ -156,11 +157,13 @@ export function DashboardClient() {
       {!isLoading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredIssues.length > 0 ? (
-            filteredIssues.map((issue) => <IssueCard key={issue.id} issue={issue} onUpvote={handleUpvote} />)
+            filteredIssues.map((issue) => 
+                <IssueCard key={issue.id} issue={issue} onUpvote={handleUpvote} />
+            )
           ) : (
-            <div className="col-span-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-64">
-              <p className="text-lg font-medium">📋</p>
-              <p className="text-lg font-medium">No issues found.</p>
+            <div className="col-span-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl h-64 bg-card">
+              <p className="text-4xl">📋</p>
+              <p className="text-lg font-medium mt-4">No issues found.</p>
               <p className="text-muted-foreground">Try adjusting your filters or be the first to report one!</p>
             </div>
           )}

@@ -13,6 +13,15 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 
+function MyReportsSkeletons() {
+    return (
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-[280px] w-full rounded-2xl" />
+            <Skeleton className="h-[280px] w-full rounded-2xl" />
+        </div>
+    )
+}
+
 export function MyReportsClient() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -41,18 +50,15 @@ export function MyReportsClient() {
     });
   };
 
-  if (isUserLoading || (isLoading && !issues)) {
-    return (
-        <div className="space-y-4">
-            <Skeleton className="h-[250px] w-full rounded-lg" />
-            <Skeleton className="h-[250px] w-full rounded-lg" />
-        </div>
-    );
+  // State 1: Still checking for user
+  if (isUserLoading) {
+    return <MyReportsSkeletons />;
   }
 
-  if (!user && !isUserLoading) {
+  // State 2: No user found
+  if (!user) {
       return (
-        <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-full">
+        <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl h-full bg-card">
             <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-lg font-medium">Please log in</p>
             <p className="text-muted-foreground mb-4">You need to be logged in to view your reported issues.</p>
@@ -62,7 +68,15 @@ export function MyReportsClient() {
         </div>
       )
   }
+  
+  // From here, we have a user. Now check for issues loading or errors.
+  
+  // State 3: Loading user's issues
+  if (isLoading) {
+      return <MyReportsSkeletons />
+  }
 
+  // State 4: Error loading issues
   if (error) {
       return (
         <Alert variant="destructive">
@@ -75,15 +89,17 @@ export function MyReportsClient() {
       )
   }
 
+  // State 5: Data loaded, render issues or empty state
   return (
-    <div className="space-y-4">
-      {!isLoading && issues && issues.length > 0 ? (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {issues && issues.length > 0 ? (
         issues.map((issue) => <IssueCard key={issue.id} issue={issue} onUpvote={handleUpvote} />)
       ) : (
-        <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg h-full">
-          <p className="text-lg font-medium">No issues reported yet.</p>
-          <p className="text-muted-foreground mb-4">You haven't reported any issues. Let's change that!</p>
-          <Link href="/report">
+        <div className="col-span-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl h-64 bg-card">
+          <p className="text-4xl">📝</p>
+          <p className="text-lg font-medium mt-4">No reports yet.</p>
+          <p className="text-muted-foreground">You haven't reported any issues. Let's change that!</p>
+          <Link href="/report" className="mt-4">
             <Button>Report an Issue</Button>
           </Link>
         </div>
