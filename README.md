@@ -18,6 +18,7 @@ The workflow is simple and effective:
 - **User Authentication:** Secure sign-up and login functionality.
 - **Report an Issue (`/report`):** An intuitive form to submit new issue reports, complete with title, detailed description, location (with geolocation support), and photo uploads.
 - **Public Dashboard (`/`):** A real-time, filterable dashboard displaying all reported issues on interactive cards.
+- **Image Carousel:** A dynamic carousel on the dashboard showcasing recent civic improvements or news.
 - **Upvote Issues:** Show support for an issue and help authorities prioritize by upvoting it.
 - **My Reports (`/my-reports`):** A personalized page for users to track the status of all the issues they have submitted.
 

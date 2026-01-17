@@ -56,6 +56,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'media.telanganatoday.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'assets.thehansindia.com',
       },
       {
