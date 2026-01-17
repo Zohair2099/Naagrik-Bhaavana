@@ -27,12 +27,6 @@ import { format } from 'date-fns';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 
-const statusColors: Record<string, string> = {
-  Reported: "bg-[#FEF3C7] text-[#92400E]",
-  'In Progress': "bg-[#DBEAFE] text-[#1E40AF]",
-  Resolved: "bg-[#D1FAE5] text-[#065F46]",
-};
-
 export function AdminClient() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -53,6 +47,18 @@ export function AdminClient() {
       updatedAt: new Date().toISOString(),
     });
   };
+
+  const getSeverityVariant = (severity: Issue['severity']) => {
+    switch (severity) {
+      case 'high':
+        return 'destructive';
+      case 'medium':
+        return 'secondary';
+      case 'low':
+      default:
+        return 'outline';
+    }
+  }
 
   if (isUserLoading || isLoading) {
     return (
@@ -109,7 +115,7 @@ export function AdminClient() {
                   <Badge variant="outline">{issue.category}</Badge>
                 </TableCell>
                 <TableCell className="capitalize">
-                   <Badge variant={issue.severity === 'high' ? 'destructive' : issue.severity === 'medium' ? 'secondary' : 'default'}>
+                   <Badge variant={getSeverityVariant(issue.severity)}>
                     {issue.severity}
                   </Badge>
                 </TableCell>

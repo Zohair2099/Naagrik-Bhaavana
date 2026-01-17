@@ -58,6 +58,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'assets.thehansindia.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+      },
     ],
   },
 };

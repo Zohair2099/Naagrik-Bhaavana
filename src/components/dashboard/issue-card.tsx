@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ThumbsUp, MapPin, Calendar, FileImage } from 'lucide-react';
 import type { Issue } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import {
@@ -14,26 +15,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-const categoryColors: Record<string, string> = {
-  Pothole: "bg-red-100 text-red-800",
-  Garbage: "bg-yellow-100 text-yellow-800",
-  'Street Light': "bg-blue-100 text-blue-800",
-  Water: "bg-green-100 text-green-800",
-  Drainage: "bg-indigo-100 text-indigo-800",
-  Other: "bg-gray-100 text-gray-800",
-};
-
-const severityColors: Record<string, string> = {
-  low: "bg-green-100 text-green-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  high: "bg-red-100 text-red-800",
-};
-
-const statusColors: Record<string, string> = {
-  Reported: "bg-yellow-100 text-yellow-800",
-  'In Progress': "bg-blue-100 text-blue-800",
-  Resolved: "bg-green-100 text-green-800",
-};
 
 interface IssueCardProps {
   issue: Issue;
@@ -42,6 +23,32 @@ interface IssueCardProps {
 
 
 export function IssueCard({ issue, onUpvote }: IssueCardProps) {
+
+  const getSeverityVariant = (severity: Issue['severity']) => {
+    switch (severity) {
+      case 'high':
+        return 'destructive';
+      case 'medium':
+        return 'secondary';
+      case 'low':
+      default:
+        return 'outline';
+    }
+  }
+
+  const getStatusVariant = (status: Issue['status']) => {
+    switch (status) {
+      case 'Resolved':
+        return 'default';
+      case 'In Progress':
+        return 'secondary';
+      case 'Reported':
+      default:
+        return 'outline';
+    }
+  }
+
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -62,19 +69,13 @@ export function IssueCard({ issue, onUpvote }: IssueCardProps) {
           )}
 
           <div className="p-5 flex flex-col flex-grow">
-            <div className="mb-3 flex items-start justify-between">
-                <span className={cn(
-                    "rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider",
-                    categoryColors[issue.category] || categoryColors['Other']
-                )}>
+            <div className="mb-3 flex items-start justify-between gap-2">
+                <Badge variant="outline" className="uppercase truncate">
                     {issue.category}
-                </span>
-                <span className={cn(
-                    "rounded-full px-3 py-1 text-xs font-bold capitalize",
-                    severityColors[issue.severity]
-                )}>
+                </Badge>
+                <Badge variant={getSeverityVariant(issue.severity)} className="capitalize">
                     {issue.severity}
-                </span>
+                </Badge>
             </div>
 
             <h3 className="mb-2 text-lg font-bold text-card-foreground group-hover:text-primary truncate">
@@ -89,12 +90,9 @@ export function IssueCard({ issue, onUpvote }: IssueCardProps) {
             </div>
 
             <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                <span className={cn(
-                    "rounded-full px-3 py-1 text-xs font-bold",
-                    statusColors[issue.status]
-                )}>
+                <Badge variant={getStatusVariant(issue.status)}>
                     {issue.status}
-                </span>
+                </Badge>
                 <Button
                     variant="outline"
                     size="sm"
@@ -121,10 +119,10 @@ export function IssueCard({ issue, onUpvote }: IssueCardProps) {
                <Image src={issue.imageUrl} alt={issue.title} fill className="object-cover"/>
             </div>
           )}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span className={cn("rounded-full px-3 py-1 text-xs font-bold", categoryColors[issue.category] || categoryColors['Other'])}>{issue.category}</span>
-            <span className={cn("rounded-full px-3 py-1 text-xs font-bold capitalize", severityColors[issue.severity])}>{issue.severity}</span>
-            <span className={cn("rounded-full px-3 py-1 text-xs font-bold", statusColors[issue.status])}>{issue.status}</span>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+            <Badge variant="outline" className="uppercase">{issue.category}</Badge>
+            <Badge variant={getSeverityVariant(issue.severity)} className="capitalize">{issue.severity}</Badge>
+            <Badge variant={getStatusVariant(issue.status)}>{issue.status}</Badge>
           </div>
            <p className="text-muted-foreground">{issue.description}</p>
           <div className="space-y-2 text-sm">
