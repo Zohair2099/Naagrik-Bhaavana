@@ -10,16 +10,16 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: '1rem',
+      padding: '2rem', // from example.html
       screens: {
         '2xl': '1400px',
       },
     },
     extend: {
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        headline: ['"PT Sans"', 'sans-serif'],
-        code: ['monospace'],
+        body: ['"DM Sans"', 'sans-serif'], // from example.html
+        headline: ['"DM Sans"', 'sans-serif'], // from example.html
+        code: ['"Space Mono"', 'monospace'], // from example.html
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -77,6 +77,11 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        'lg': '0 8px 32px rgba(0, 0, 0, 0.08)',
+        'md': '0 4px 12px rgba(0, 0, 0, 0.08)',
+        'sm': '0 2px 8px rgba(0, 0, 0, 0.08)',
       },
       keyframes: {
         'accordion-down': {
