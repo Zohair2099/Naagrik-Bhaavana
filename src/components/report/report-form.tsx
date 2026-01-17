@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { collection, addDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { MapPin, Loader2, AlertTriangle, UploadCloud, FileCheck2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, useFirebaseApp } from '@/firebase';
+import { useFirestore, useUser, useStorage } from '@/firebase';
 import { categorizeIssueReport, CategorizeIssueReportOutput } from '@/ai/flows/categorize-issue-reports';
 import { cn } from '@/lib/utils';
 
@@ -55,7 +55,7 @@ export function ReportForm() {
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
-  const firebaseApp = useFirebaseApp();
+  const storage = useStorage();
   const { user, isUserLoading } = useUser();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,7 +88,6 @@ export function ReportForm() {
     // Step 1: Upload Media
     try {
       setSubmissionStep('Uploading media...');
-      const storage = getStorage(firebaseApp);
       const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
       const storageRef = ref(storage, storagePath);
       await uploadBytes(storageRef, values.media);
@@ -298,7 +297,7 @@ export function ReportForm() {
         <FormField
           control={form.control}
           name="media"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { onChange, ...rest } }) => (
              <FormItem>
                 <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
