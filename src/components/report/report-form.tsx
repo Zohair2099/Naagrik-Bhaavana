@@ -298,7 +298,7 @@ export function ReportForm() {
         <FormField
           control={form.control}
           name="media"
-          render={({ field: { onChange, ...rest } }) => (
+          render={({ field: { onChange, value, ...rest } }) => (
              <FormItem>
                 <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
