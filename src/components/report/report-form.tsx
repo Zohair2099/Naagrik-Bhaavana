@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { collection } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { MapPin, Loader2, AlertTriangle } from 'lucide-react';
 
@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, useFirebaseApp, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useFirebaseApp } from '@/firebase';
 import { categorizeIssueReport, CategorizeIssueReportOutput } from '@/ai/flows/categorize-issue-reports';
 
 const MAX_FILE_SIZE_MB = 50;
@@ -130,7 +130,7 @@ export function ReportForm() {
         imageHint: categorization.imageHint
       };
 
-      addDocumentNonBlocking(issuesCollectionRef, newIssue);
+      await addDoc(issuesCollectionRef, newIssue);
       
       // 4. Notify user of success and redirect.
       toast({
@@ -142,7 +142,7 @@ export function ReportForm() {
       router.push('/');
 
     } catch (error) {
-      // This outer catch block will now primarily handle critical failures like file upload errors.
+      // This outer catch block will now handle critical failures from file upload or database writes.
       console.error('Error submitting issue:', error);
       toast({
         variant: 'destructive',
