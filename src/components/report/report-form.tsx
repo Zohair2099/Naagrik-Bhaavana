@@ -14,16 +14,33 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, useFirebaseApp, addDocumentNonBlocking } from '@/firebase';
 import { categorizeIssueReport } from '@/ai/flows/categorize-issue-reports';
 
+const MAX_FILE_SIZE_MB = 50;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const ACCEPTED_MEDIA_TYPES = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime']; // .mov is video/quicktime
+
 const formSchema = z.object({
-  title: z.string().min(5, 'Please provide a title (at least 5 characters).'),
-  description: z.string().min(10, 'Please provide a detailed description (at least 10 characters).'),
-  location: z.string().min(3, 'Please provide a specific location.'),
-  media: z.instanceof(File).optional(),
+  title: z.string().min(5, 'A title of at least 5 characters is required.'),
+  description: z.string().optional(),
+  location: z.string().min(3, 'A specific location is required.'),
+  category: z.string({ required_error: 'You must select an issue category.' }),
+  media: z
+    .instanceof(File, { message: 'A photo or video file is required.' })
+    .refine((file) => file.size > 0, 'A photo or video file is required.')
+    .refine(
+      (file) => file.size <= MAX_FILE_SIZE_BYTES,
+      `The maximum file size is ${MAX_FILE_SIZE_MB}MB.`
+    )
+    .refine(
+      (file) => ACCEPTED_MEDIA_TYPES.includes(file.type),
+      'Invalid file type. Please upload a JPEG, PNG, MP4, or MOV file.'
+    ),
 });
+
 
 // Helper to convert a file to a data URI
 const fileToDataUri = (file: File): Promise<string> => {
@@ -70,37 +87,30 @@ export function ReportForm() {
     try {
       let imageUrl: string | undefined;
       let imageHint: string | undefined;
-      let photoDataUri: string | undefined;
+      
+      const photoDataUri = await fileToDataUri(values.media);
+      const storage = getStorage(firebaseApp);
+      const storageRef = ref(storage, `issues/${user.uid}/${Date.now()}-${values.media.name}`);
+      
+      const uploadResult = await uploadBytes(storageRef, values.media);
+      imageUrl = await getDownloadURL(uploadResult.ref);
 
-      // Step 1: Handle image upload if a file is provided
-      if (values.media) {
-        photoDataUri = await fileToDataUri(values.media);
-        const storage = getStorage(firebaseApp);
-        const storageRef = ref(storage, `issues/${user.uid}/${Date.now()}-${values.media.name}`);
-        
-        // Upload file and get URL
-        const uploadResult = await uploadBytes(storageRef, values.media);
-        imageUrl = await getDownloadURL(uploadResult.ref);
-      }
-
-      // Step 2: Call the AI to categorize the issue
       const categorization = await categorizeIssueReport({
-        description: values.description,
+        description: values.description || values.title, // Use title if description is empty
         location: values.location,
         photoDataUri: photoDataUri,
       });
       
       imageHint = categorization.imageHint;
 
-      // Step 3: Prepare the new issue document
       const issuesCollectionRef = collection(firestore, 'issues');
       const newIssue = {
         userId: user.uid,
         title: values.title,
-        description: values.description,
+        description: values.description || 'No description provided.',
         location: values.location,
-        category: categorization.category,
-        severity: categorization.severity,
+        category: values.category, // Use user-selected category
+        severity: categorization.severity, // Use AI-assessed severity
         status: 'Reported' as const,
         upvotes: 0,
         createdAt: new Date().toISOString(),
@@ -111,12 +121,11 @@ export function ReportForm() {
         imageHint
       };
 
-      // Step 4: Save to Firestore (non-blocking)
       addDocumentNonBlocking(issuesCollectionRef, newIssue);
       
       toast({
-        title: 'Issue Reported!',
-        description: `Thanks for your help. Your issue has been submitted and categorized as "${categorization.severity}" severity.`,
+        title: 'Issue Reported Successfully!',
+        description: `Thank you for your submission. Your report is now live.`,
       });
 
       form.reset();
@@ -185,7 +194,7 @@ export function ReportForm() {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Large pothole causing traffic issues" {...field} />
               </FormControl>
@@ -193,16 +202,44 @@ export function ReportForm() {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type of Issue <span className="text-destructive">*</span></FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                    <SelectItem value="Pothole">Road Repair / Pothole</SelectItem>
+                    <SelectItem value="Traffic">Traffic & Signals</SelectItem>
+                    <SelectItem value="Safety">Public Safety Concern</SelectItem>
+                    <SelectItem value="Garbage">Garbage & Sanitation</SelectItem>
+                    <SelectItem value="Street Light">Street Light Outage</SelectItem>
+                    <SelectItem value="Water">Water Leakage / Supply</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describe the issue in detail. What is it, and why is it a problem?"
-                  rows={5}
+                  placeholder="Provide additional details about the issue."
+                  rows={4}
                   {...field}
                 />
               </FormControl>
@@ -215,7 +252,7 @@ export function ReportForm() {
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Location <span className="text-destructive">*</span></FormLabel>
               <div className="flex gap-2">
                 <FormControl>
                   <Input placeholder="e.g., Corner of Main St & Oak Ave" {...field} />
@@ -235,15 +272,16 @@ export function ReportForm() {
           name="media"
           render={({ field: { onChange, value, ...rest } }) => (
              <FormItem>
-              <FormLabel>Attach Photo (Optional)</FormLabel>
+              <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <Input 
                   type="file" 
-                  accept="image/*"
+                  accept="image/jpeg,image/png,video/mp4,video/quicktime"
                   onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                  className="pt-2 file:text-primary file:cursor-pointer"
                 />
               </FormControl>
-              <FormDescription>A picture is worth a thousand words.</FormDescription>
+              <FormDescription>A picture or video is required. Max file size: {MAX_FILE_SIZE_MB}MB.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -251,10 +289,10 @@ export function ReportForm() {
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting Report...
             </>
           ) : (
-            'Submit Issue'
+            'Send Report'
           )}
         </Button>
       </form>
