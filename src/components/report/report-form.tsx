@@ -86,13 +86,23 @@ export function ReportForm() {
     try {
       // Step 1: Upload Media
       let imageUrl = '';
-      setSubmissionStep('Uploading media...');
-      const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
-      const storageRef = ref(storage, storagePath);
-      await uploadBytes(storageRef, values.media);
-      imageUrl = await getDownloadURL(storageRef);
+      try {
+        setSubmissionStep('Uploading media...');
+        const storagePath = `issues/${user.uid}/${Date.now()}-${values.media.name}`;
+        const storageRef = ref(storage, storagePath);
+        await uploadBytes(storageRef, values.media);
+        imageUrl = await getDownloadURL(storageRef);
+      } catch (error) {
+        console.error('Media upload failed:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Upload Failed',
+          description: 'Could not upload your file. Please check your storage rules and network connection.',
+        });
+        throw error; // Re-throw to be caught by the outer catch block
+      }
 
-      // Step 2: AI Analysis
+      // Step 2: AI Analysis (with fallback)
       let categorization: CategorizeIssueReportOutput;
       try {
         setSubmissionStep('Analyzing issue...');
@@ -108,30 +118,40 @@ export function ReportForm() {
         categorization = { severity: 'low', imageHint: 'user provided' };
         toast({
           title: "AI Analysis Skipped",
-          description: "A default severity was assigned. Your report will still be submitted.",
+          description: "A default severity was assigned. Continuing submission...",
         });
       }
 
       // Step 3: Save to Firestore
-      setSubmissionStep('Saving report...');
-      const issuesCollectionRef = collection(firestore, 'issues');
-      const newIssue = {
-        userId: user.uid,
-        title: values.title,
-        description: values.description || 'No description provided.',
-        location: values.location,
-        category: values.category,
-        severity: categorization.severity,
-        status: 'Reported' as const,
-        upvotes: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        reporterName: user.displayName || user.email || 'Anonymous',
-        reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
-        imageUrl,
-        imageHint: categorization.imageHint
-      };
-      await addDoc(issuesCollectionRef, newIssue);
+      try {
+        setSubmissionStep('Saving report...');
+        const issuesCollectionRef = collection(firestore, 'issues');
+        const newIssue = {
+          userId: user.uid,
+          title: values.title,
+          description: values.description || 'No description provided.',
+          location: values.location,
+          category: values.category,
+          severity: categorization.severity,
+          status: 'Reported' as const,
+          upvotes: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          reporterName: user.displayName || user.email || 'Anonymous',
+          reporterAvatarUrl: user.photoURL || `https://api.dicebear.com/8.x/initials/svg?seed=${user.email}`,
+          imageUrl,
+          imageHint: categorization.imageHint
+        };
+        await addDoc(issuesCollectionRef, newIssue);
+      } catch (error) {
+        console.error('Firestore save failed:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Save Failed',
+          description: 'Could not save your report. Please check your firestore rules and network connection.',
+        });
+        throw error; // Re-throw to be caught by the outer catch block
+      }
 
       // Step 4: Success
       setSubmissionStep('Done!');
@@ -144,13 +164,10 @@ export function ReportForm() {
       router.push('/my-reports');
 
     } catch (error) {
-      console.error('Submission failed:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Submission Failed',
-        description: 'Could not upload media or save the report. Please check your connection and file permissions.',
-      });
+      // This outer catch block will halt the process if any of the inner steps fail and re-throw.
+      console.log("Submission process halted due to an error in a sub-step.");
     } finally {
+      // This ensures the UI is reset regardless of success or failure.
       setIsSubmitting(false);
       setSubmissionStep('');
     }
@@ -284,7 +301,7 @@ export function ReportForm() {
         <FormField
           control={form.control}
           name="media"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { onChange, ...rest } }) => (
              <FormItem>
                 <FormLabel>Attach Photo or Video <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
